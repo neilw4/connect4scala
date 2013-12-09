@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Connect 4</string>
+    <string name="new_game">New Game</string>
+    <string name="player_A_toggle">Player A</string>
+    <string name="player_B_toggle">Player B</string>
+
+</resources>
