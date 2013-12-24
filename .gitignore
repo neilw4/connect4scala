@@ -30,3 +30,6 @@ proguard_cache/
 *.ipr
 *.iws
 .idea/
+
+*.o
+*.hi
