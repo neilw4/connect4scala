@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <assert.h>
+
 #define HEIGHT 6
 #define WIDTH 7
 
@@ -20,7 +22,7 @@ typedef struct {
 
 
 void resetBoard(Board* board) {
-    memset(&(board->board), BLANK, (sizeof(Piece) * WIDTH * HEIGHT));
+    memset(&(board->board), BLANK, sizeof(Piece) * WIDTH * HEIGHT);
     memset(&board->pieceHeight, 0, sizeof(Piece) * WIDTH);
     board->pieceCount = 0;
 }
@@ -80,10 +82,108 @@ int checkWin(Board* board, int col, Piece lastPlayer) {
     return 0;
 }
 
-// Returns the value of the board from the viewpoint of the player.
-int eval(Board* board, Piece player) {
-    //TODO
-    return 0;
+// Returns the value of the board from the viewpoint of ME.
+int eval(Board* board) {
+    int score = 0;
+
+    //For every possible vertical line.
+    for(int row = 0; row < HEIGHT - 3; row++){
+        for(int col = 0;col < HEIGHT; col++){
+            // Multiplied by 7 for every extra move to get to the position.
+            int movesAwayScore = 16807;
+            Piece player = BLANK;
+            // For every cell in the line.
+            for (int index = 0; index < 4; index++) {
+                Piece value = board->board[col][row + index];
+                if (value == -player) {
+                    // Line contains both players and cannot be used.
+                    player = BLANK;
+                    break;
+                }
+                player = value;
+                // Every blank space (including ones below the current space) decreases the score.
+                for (int rowTemp = row; (rowTemp >= 0) && (board->board[col][rowTemp] == BLANK); rowTemp--) {
+                    movesAwayScore /= 7;
+                }
+            }
+            score += player * movesAwayScore;
+        }
+    }
+
+
+    //For every possible horizontal line.
+    for(int row = 0; row < HEIGHT; row++){
+        for(int col = 0;col < HEIGHT - 3; col++){
+            // Multiplied by 7 for every extra move to get to the position.
+            int movesAwayScore = 16807;
+            Piece player = BLANK;
+            // For every cell in the line.
+            for (int index = 0; index < 4; index++) {
+                Piece value = board->board[col + index][row];
+                if (value == -player) {
+                    // Line contains both players and cannot be used.
+                    player = BLANK;
+                    break;
+                }
+                player = value;
+                // Every blank space (including ones below the current space) decreases the score.
+                for (int rowTemp = row; (rowTemp >= 0) && (board->board[col][rowTemp] == BLANK); rowTemp--) {
+                    movesAwayScore /= 7;
+                }
+            }
+            score += player * movesAwayScore;
+        }
+    }
+
+    //For every possible diagonal (bl->tr) line.
+    for(int row = 0; row < HEIGHT - 3; row++){
+        for(int col = 0;col < HEIGHT - 3; col++){
+            // Multiplied by 7 for every extra move to get to the position.
+            int movesAwayScore = 16807;
+            Piece player = BLANK;
+            // For every cell in the line.
+            for (int index = 0; index < 4; index++) {
+                Piece value = board->board[col + index][row + index];
+                if (value == -player) {
+                    // Line contains both players and cannot be used.
+                    player = BLANK;
+                    break;
+                }
+                player = value;
+                // Every blank space (including ones below the current space) decreases the score.
+                for (int rowTemp = row; (rowTemp >= 0) && (board->board[col][rowTemp] == BLANK); rowTemp--) {
+                    movesAwayScore /= 7;
+                }
+            }
+            score += player * movesAwayScore;
+        }
+    }
+
+    //For every possible diagonal (tl->br) line.
+    for(int row = 2; row < HEIGHT; row++){
+        for(int col = 0;col < HEIGHT - 3; col++){
+            // Multiplied by 7 for every extra move to get to the position.
+            int movesAwayScore = 16807;
+            Piece player = BLANK;
+            // For every cell in the line.
+            for (int index = 0; index < 4; index++) {
+                Piece value = board->board[col + index][row - index];
+                if (value == -player) {
+                    // Line contains both players and cannot be used.
+                    player = BLANK;
+                    break;
+                }
+                player = value;
+                // Every blank space (including ones below the current space) decreases the score.
+                for (int rowTemp = row; (rowTemp >= 0) && (board->board[col][rowTemp] == BLANK); rowTemp--) {
+                    movesAwayScore /= 7;
+                }
+            }
+            score += player * movesAwayScore;
+        }
+    }
+
+    return score;
 }
 
 // Implementation of the negamax search algorithm.
@@ -93,7 +193,7 @@ int negamax(Board* board, int depth, Piece player, int alpha, int beta, int last
         return endGame;
     }
     if (depth == 0) {
-        return player * eval(board, player);
+        return player * eval(board);
     }
     int bestVal = INT_MIN;
     int val;
@@ -151,4 +251,17 @@ int getBestMove(Board* board, int depth) {
         }
     }
     return bestCol;
+}
+
+#include <stdlib.h>
+
+
+int main(int argv, char** argc) {
+    Board* board = calloc(sizeof(Board));
+    resetBoard(board);
+    addPiece(board, 3, ME);
+    removePiece(board, 3);
+    int bestMove = getBestMove(board, 2);
+    assert(bestMove == 3);
+    free(board);
 }

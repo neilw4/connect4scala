@@ -1,4 +1,4 @@
-package com.neilw4.c4scala
+package uk.co.neilw4.c4scala
 
 import android.widget.BaseAdapter
 import android.content.Context
