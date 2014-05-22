@@ -1,25 +1,14 @@
 package neilw4.c4scala
 
 import android.app.Activity
-import android.widget.LinearLayout
-import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.TextView
 import android.view.View
-import android.app.Fragment
-import android.os.Bundle
-import android.view.MenuInflater
 import android.view.Menu
-import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
-import android.view.LayoutInflater
 import android.view.MenuItem
-import android.content.Context
 import android.widget.GridView
-import android.widget.AdapterView.OnItemClickListener
 import android.os.Bundle
-import android.app.Fragment
-import android.view.View.OnLayoutChangeListener
 import android.widget.RelativeLayout
 
 trait UiCallback {

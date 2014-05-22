@@ -36,15 +36,6 @@ android {
         versionName "1.0"
     }
 
-    sourceSets {
-        main {
-            scala {
-                srcDir "src/main/scala"
-            }
-
-        }
-    }
-
     buildTypes {
         debug {
             runProguard true

@@ -1,10 +1,8 @@
 package neilw4.c4scala
 
 import scala.collection.mutable.Set
-import android.os.Bundle
 import android.os.Parcelable
 import android.os.Parcel
-import scala.collection.immutable.Map
 
 trait Piece {def id: Byte; def resource: Int}
 case object BLANK extends Piece {val id = 0.asInstanceOf[Byte]; val resource = R.drawable.blank}

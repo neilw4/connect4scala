@@ -17,7 +17,6 @@ typedef struct {
 } Board;
 
 
-
 int getBestMove(Board* board, int depth);
 
 void resetBoard(Board* board);

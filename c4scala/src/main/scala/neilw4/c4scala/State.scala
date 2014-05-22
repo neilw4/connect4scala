@@ -1,7 +1,6 @@
 package neilw4.c4scala
 
 import scala.collection.mutable.Set
-import android.os.Bundle
 import android.os.Parcelable
 import android.os.Parcel
 

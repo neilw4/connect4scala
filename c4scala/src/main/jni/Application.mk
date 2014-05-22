@@ -1,2 +1,0 @@
-NDK_TOOLCHAIN_VERSION=4.7
-APP_ABI := armeabi x86
