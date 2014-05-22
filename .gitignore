@@ -1,11 +1,7 @@
 .DS_Store
-*.o
-*.a
-*.hi
-*.out
-/.cache
-/target/
-/bin/
-/proguard_cache/
-/gen/
-/.settings/
+.gradle
+/local.properties
+/.idea/workspace.xml
+.DS_Store
+build
+eclipseMvn.tar.xz
