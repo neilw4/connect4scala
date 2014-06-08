@@ -1,3 +1,4 @@
+// Adapted from
 //https://github.com/saturday06/gradle-android-scala-plugin
 
 buildscript {
@@ -8,8 +9,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:0.10.1'
-//        classpath 'com.android.tools.build:gradle:0.10.1'
+        classpath 'com.android.tools.build:gradle:0.11.+'
         classpath 'jp.leafytree.gradle:gradle-android-scala-plugin:1.0-SNAPSHOT'
     }
 }
@@ -23,7 +23,7 @@ apply plugin: 'android-scala'
 
 android {
     compileSdkVersion 19
-    buildToolsVersion "19.0.3"
+    buildToolsVersion "19.1.0"
 
     lintOptions {
         abortOnError false
@@ -32,8 +32,6 @@ android {
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 19
-        versionCode 1
-        versionName "1.0"
     }
 
     buildTypes {
