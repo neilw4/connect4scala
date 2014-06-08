@@ -13,12 +13,12 @@ trait BoardSizeSetter {
 
 class BoardAdapter(context: Context, state: State, parent: View, boardSizeSetter: BoardSizeSetter) extends BaseAdapter {
 
-    setSize
+    setSize()
 
     parent.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
         override def onLayoutChange(v: View, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) = {
             if (left - right != oldLeft - oldRight || top - bottom != oldTop - oldBottom) {
-                setSize
+                setSize()
             }
         }
 
@@ -26,10 +26,10 @@ class BoardAdapter(context: Context, state: State, parent: View, boardSizeSetter
 
     var size = 0
 
-    def setSize = {
+    def setSize() = {
             size = if (parent.getHeight / state.height > parent.getWidth / state.width) parent.getWidth / state.width else parent.getHeight / state.height
             boardSizeSetter.setBoardSize(size * state.width, size * state.height)
-            notifyDataSetChanged
+            notifyDataSetChanged()
     }
 
     override val getCount = state.width * state.height
@@ -53,7 +53,7 @@ class BoardAdapter(context: Context, state: State, parent: View, boardSizeSetter
             layout.width = size
         }
         view.setLayoutParams(layout)
-        return view
+        view
     }
 
 }

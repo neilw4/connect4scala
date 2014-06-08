@@ -3,6 +3,7 @@ package neilw4.c4scala
 import scala.collection.mutable.Set
 import android.os.Parcelable
 import android.os.Parcel
+import scala.collection.mutable
 
 trait Piece {def id: Byte; def resource: Int}
 case object BLANK extends Piece {val id = 0.asInstanceOf[Byte]; val resource = R.drawable.blank}
@@ -42,13 +43,13 @@ class Board(val width: Int, val height: Int) extends Parcelable {
     
     override def describeContents = 0
 
-    private var listeners: Set[StateListener] = null
+    private var listeners: mutable.Set[StateListener] = null
 
     var _board = Array.fill[Piece](width, height)(BLANK)
     def board = _board
     private var heights = Array.fill[Int](width)(0)
 
-    def attachListeners(tListeners: Set[StateListener]) = {listeners = tListeners}
+    def attachListeners(tListeners: mutable.Set[StateListener]) = {listeners = tListeners}
     
     def callAllListeners = {
         Array.tabulate(width, height) ((x,y) => listeners.map {_.onBoardPieceChanged(_board(x)(y), x, y)})

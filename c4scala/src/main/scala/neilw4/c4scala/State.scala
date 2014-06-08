@@ -3,6 +3,7 @@ package neilw4.c4scala
 import scala.collection.mutable.Set
 import android.os.Parcelable
 import android.os.Parcel
+import scala.collection.mutable
 
 object State {
     val KEY = "com.neilw4.c4scala.State"
@@ -22,7 +23,7 @@ class State(private var _difficulty: Int, private var _playerAi: Array[Boolean],
 
     def this() = this(50, Array(false, true), new Board)
 
-    def this(source: Parcel) = this(source.readInt, Array.tabulate[Boolean](source.readInt())(_ => (source.readByte() == 1)), Board.CREATOR.createFromParcel(source))
+    def this(source: Parcel) = this(source.readInt, Array.tabulate[Boolean](source.readInt())(_ => source.readByte == 1), Board.CREATOR.createFromParcel(source))
 
     override def writeToParcel(dest: Parcel, flags: Int) = {
         dest.writeInt(difficulty)
@@ -33,7 +34,7 @@ class State(private var _difficulty: Int, private var _playerAi: Array[Boolean],
 
     override def describeContents = 0
 
-    private val listeners: Set[StateListener] = Set()
+    private val listeners: mutable.Set[StateListener] = mutable.Set()
 
     def attachListener(listener: StateListener) = {
         listeners += listener

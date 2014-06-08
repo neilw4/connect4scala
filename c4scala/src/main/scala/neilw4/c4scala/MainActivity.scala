@@ -58,8 +58,8 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
         state.callAllListeners
     }
 
-    override def onDestroy = {
-      super.onDestroy
+    override def onDestroy() = {
+      super.onDestroy()
       state.removeListener(this)
     }
 
@@ -109,6 +109,6 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
         vBoardGrid.setLayoutParams(layout)
     }
 
-    override def onBoardPieceChanged(piece: Piece, x: Int, y: Int) = vBoardGridAdapter.notifyDataSetChanged
+    override def onBoardPieceChanged(piece: Piece, x: Int, y: Int) = vBoardGridAdapter.notifyDataSetChanged()
 
 }
