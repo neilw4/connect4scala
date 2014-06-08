@@ -1,6 +1,5 @@
 package neilw4.c4scala
 
-import scala.collection.mutable.Set
 import android.os.Parcelable
 import android.os.Parcel
 import scala.collection.mutable
@@ -14,6 +13,7 @@ object Board {
     val KEY = "com.neilw4.c4scala.Board"
     val CREATOR: Parcelable.Creator[Board] = new Parcelable.Creator[Board] {
         override def newArray(size: Int) = Array.fill[Board](size)(null)
+
         override def createFromParcel(source: Parcel) = source match {
             case null => new Board
             case _ => new Board(source)
@@ -24,7 +24,7 @@ object Board {
 class Board(val width: Int, val height: Int) extends Parcelable {
 
     def this() = this(7, 6)
-    
+
     def this(source: Parcel) = {
         this(source.readInt, source.readInt)
         _board = _board.map(_.map(x => (source.readByte match {
@@ -40,7 +40,7 @@ class Board(val width: Int, val height: Int) extends Parcelable {
         dest.writeInt(height)
         _board.map(_.map(piece => dest.writeByte(piece.id)))
     }
-    
+
     override def describeContents = 0
 
     private var listeners: mutable.Set[StateListener] = null
@@ -49,18 +49,26 @@ class Board(val width: Int, val height: Int) extends Parcelable {
     def board = _board
     private var heights = Array.fill[Int](width)(0)
 
-    def attachListeners(tListeners: mutable.Set[StateListener]) = {listeners = tListeners}
-    
-    def callAllListeners = {
-        Array.tabulate(width, height) ((x,y) => listeners.map {_.onBoardPieceChanged(_board(x)(y), x, y)})
+    def attachListeners(listeners: mutable.Set[StateListener]) = {
+        this.listeners = listeners
     }
 
-    def canAdd(piece: Piece, x: Int) = piece != BLANK && heights(x) < _board(0).length
+    def callAllListeners = {
+        Array.tabulate(width, height) (
+            (x, y) => listeners.map {
+                _.onBoardPieceChanged(_board(x)(y), x, y)
+            }
+        )
+    }
 
-    def add(piece: Piece, x: Int) : Boolean = if (canAdd(piece, x)) {
-        _board(x)(heights(x)) = piece
-        heights(x)+= 1
-        true
-    } else false
+    def canAdd(piece: Piece, x: Int) =
+        piece != BLANK && heights(x) < _board(0).length
+
+    def add(piece: Piece, x: Int) : Boolean =
+        if (canAdd(piece, x)) {
+            _board(x)(heights(x)) = piece
+            heights(x)+= 1
+            true
+        } else false
 
 }
