@@ -97,7 +97,7 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
             case false => R.drawable.red_user
         })
     }
-    
+
     override def setBoardSize(width: Int, height: Int) = {
         var layout: LayoutParams = vBoardGrid.getLayoutParams
         if (layout == null) {

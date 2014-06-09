@@ -10,44 +10,52 @@ case object YELLOW extends Piece {val id = 1.asInstanceOf[Byte]; val resource = 
 case object RED extends Piece {val id = 2.asInstanceOf[Byte]; val resource = R.drawable.red}
 
 object Board {
-    val KEY = "com.neilw4.c4scala.Board"
+    val TAG = this.getClass.toString
     val CREATOR: Parcelable.Creator[Board] = new Parcelable.Creator[Board] {
         override def newArray(size: Int) = Array.fill[Board](size)(null)
 
         override def createFromParcel(source: Parcel) = source match {
             case null => new Board
-            case _ => new Board(source)
+            case _ => {
+                val width = source.readInt()
+                val height = source.readInt()
+                val emptyBoard: Array[Array[Piece]] = Array.ofDim[Piece](width, height)
+
+                // TODO: find out why this can't be simpler
+                val board: Array[Array[Piece]] = emptyBoard.map(_.map(x => {
+                    val v: Piece = source.readByte match {
+                        case BLANK.id => BLANK
+                        case YELLOW.id => YELLOW
+                        case RED.id => RED
+                    }
+                    v
+                }))
+                new Board(width, height, board)
+            }
         }
     }
 }
 
-class Board(val width: Int, val height: Int) extends Parcelable {
+class Board(val width: Int, val height: Int, board: Array[Array[Piece]]) extends Parcelable {
 
+    def this(width: Int, height: Int) = this(width, height, Array.fill[Piece](width, height)(BLANK))
     def this() = this(7, 6)
-
-    def this(source: Parcel) = {
-        this(source.readInt, source.readInt)
-        _board = _board.map(_.map(x => (source.readByte match {
-            case BLANK.id => BLANK
-            case YELLOW.id => YELLOW
-            case RED.id => RED
-        }).asInstanceOf[Piece]))
-        heights = _board.map(_.takeWhile(BLANK !=).length)
-    }
 
     override def writeToParcel(dest: Parcel, flags: Int) = {
         dest.writeInt(width)
         dest.writeInt(height)
-        _board.map(_.map(piece => dest.writeByte(piece.id)))
+        iterate((piece) => dest.writeByte(piece.id))
     }
 
     override def describeContents = 0
 
     private var listeners: mutable.Set[StateListener] = null
 
-    var _board = Array.fill[Piece](width, height)(BLANK)
-    def board = _board
-    private var heights = Array.fill[Int](width)(0)
+    private val heights = board.map(_.takeWhile(BLANK !=).length)
+
+    def iterate(f: Piece => Unit) = board.foreach(_.foreach(piece => f(piece)))
+
+    def apply(i: Int) = board.apply(i)
 
     def attachListeners(listeners: mutable.Set[StateListener]) = {
         this.listeners = listeners
@@ -56,17 +64,17 @@ class Board(val width: Int, val height: Int) extends Parcelable {
     def callAllListeners = {
         Array.tabulate(width, height) (
             (x, y) => listeners.map {
-                _.onBoardPieceChanged(_board(x)(y), x, y)
+                _.onBoardPieceChanged(board(x)(y), x, y)
             }
         )
     }
 
     def canAdd(piece: Piece, x: Int) =
-        piece != BLANK && heights(x) < _board(0).length
+        piece != BLANK && heights(x) < board(0).length
 
     def add(piece: Piece, x: Int) : Boolean =
         if (canAdd(piece, x)) {
-            _board(x)(heights(x)) = piece
+            board(x)(heights(x)) = piece
             heights(x)+= 1
             true
         } else false

@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="macroid_2.11-2.0.0-M2">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/c4scala/libs/macroid_2.11-2.0.0-M2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
