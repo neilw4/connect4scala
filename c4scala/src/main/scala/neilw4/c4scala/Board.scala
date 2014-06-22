@@ -4,22 +4,24 @@ import android.os.Parcelable
 import android.os.Parcel
 import scala.collection.mutable
 
-trait Piece {def id: Byte; def resource: Int}
-case object BLANK extends Piece {val id = 0.asInstanceOf[Byte]; val resource = R.drawable.blank}
-case object YELLOW extends Piece {val id = 1.asInstanceOf[Byte]; val resource = R.drawable.yellow}
-case object RED extends Piece {val id = 2.asInstanceOf[Byte]; val resource = R.drawable.red}
+trait Piece {val id: Byte; val resource: Int; val opposite: Piece}
+case object BLANK extends Piece {val id = 0.asInstanceOf[Byte]; val resource = R.drawable.blank; val opposite = BLANK}
+case object YELLOW extends Piece {val id = 1.asInstanceOf[Byte]; val resource = R.drawable.yellow; val opposite = RED}
+case object RED extends Piece {val id = 2.asInstanceOf[Byte]; val resource = R.drawable.red; val opposite = YELLOW}
 
 object Board {
     val TAG = this.getClass.toString
+
+    val WIDTH = 7
+    val HEIGHT = 6
+
     val CREATOR: Parcelable.Creator[Board] = new Parcelable.Creator[Board] {
         override def newArray(size: Int) = Array.fill[Board](size)(null)
 
         override def createFromParcel(source: Parcel) = source match {
             case null => new Board
             case _ => {
-                val width = source.readInt()
-                val height = source.readInt()
-                val emptyBoard: Array[Array[Piece]] = Array.ofDim[Piece](width, height)
+                val emptyBoard: Array[Array[Piece]] = Array.ofDim[Piece](Board.WIDTH, Board.HEIGHT)
 
                 // TODO: find out why this can't be simpler
                 val board: Array[Array[Piece]] = emptyBoard.map(_.map(x => {
@@ -30,20 +32,17 @@ object Board {
                     }
                     v
                 }))
-                new Board(width, height, board)
+                new Board(board)
             }
         }
     }
 }
 
-class Board(val width: Int, val height: Int, board: Array[Array[Piece]]) extends Parcelable {
+class Board(board: Array[Array[Piece]]) extends Parcelable {
 
-    def this(width: Int, height: Int) = this(width, height, Array.fill[Piece](width, height)(BLANK))
-    def this() = this(7, 6)
+    def this() = this(Array.fill[Piece](Board.WIDTH, Board.HEIGHT)(BLANK))
 
     override def writeToParcel(dest: Parcel, flags: Int) = {
-        dest.writeInt(width)
-        dest.writeInt(height)
         iterate((piece) => dest.writeByte(piece.id))
     }
 
@@ -51,7 +50,7 @@ class Board(val width: Int, val height: Int, board: Array[Array[Piece]]) extends
 
     private var listeners: mutable.Set[StateListener] = null
 
-    private val heights = board.map(_.takeWhile(BLANK !=).length)
+    val heights = board.map(_.takeWhile(BLANK !=).length)
 
     def iterate(f: Piece => Unit) = board.foreach(_.foreach(piece => f(piece)))
 
@@ -62,7 +61,7 @@ class Board(val width: Int, val height: Int, board: Array[Array[Piece]]) extends
     }
 
     def callAllListeners = {
-        Array.tabulate(width, height) (
+        Array.tabulate(Board.WIDTH, Board.HEIGHT) (
             (x, y) => listeners.map {
                 _.onBoardPieceChanged(board(x)(y), x, y)
             }
@@ -79,4 +78,21 @@ class Board(val width: Int, val height: Int, board: Array[Array[Piece]]) extends
             true
         } else false
 
+    def canRemove(x: Int): Boolean = heights(x) > 0
+
+    def remove(x: Int): Boolean =
+        if (canRemove(x)) {
+            heights(x) -= 1
+            board(x)(heights(x)) = BLANK
+            true
+        } else false
+
+    def isFull(): Boolean = {
+        for (colHeight <- heights) {
+            if (colHeight < Board.HEIGHT) {
+                return false
+            }
+        }
+        return true
+    }
 }

@@ -53,7 +53,7 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
         vBoardGridContainer = findViewById(R.id.board_grid_container)
         vBoardGrid = findViewById(R.id.board_grid).asInstanceOf[GridView]
         vBoardGridAdapter = new BoardAdapter(this, state, vBoardGridContainer, this)
-        vBoardGrid.setNumColumns(state.width)
+        vBoardGrid.setNumColumns(Board.WIDTH)
         vBoardGrid.setAdapter(vBoardGridAdapter)
         state.callAllListeners
     }
@@ -63,7 +63,7 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
       state.removeListener(this)
     }
 
-    override def onSaveInstanceState(savedInstanceState: Bundle) = savedInstanceState.putParcelable(State.KEY , state)
+    override def onSaveInstanceState(savedInstanceState: Bundle) = savedInstanceState.putParcelable(State.KEY, state)
 
     override def onCreateOptionsMenu(menu: Menu) = {
         getMenuInflater.inflate(R.menu.main, menu)

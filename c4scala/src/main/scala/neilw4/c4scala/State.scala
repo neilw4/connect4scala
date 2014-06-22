@@ -70,7 +70,4 @@ class State(private var _difficulty: Int, private var _playerAi: Array[Boolean],
 
     _board.attachListeners(listeners)
     def board = _board
-
-    def width = _board.width
-    def height = _board.height
 }

@@ -1,5 +1,5 @@
 #include <limits.h>
-
+#include <stdbool.h>
 
 #define HEIGHT 6
 #define WIDTH 7

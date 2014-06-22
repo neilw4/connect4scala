@@ -1,4 +1,3 @@
-#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -240,14 +239,3 @@ int getBestMove(Board* board, int depth) {
     }
     return bestCol;
 }
-
-// #include <stdlib.h>
-// int main(int argv, char** argc) {
-//     Board* board = calloc(sizeof(Board));
-//     resetBoard(board);
-//     addPiece(board, 3, ME);
-//     removePiece(board, 3);
-//     int bestMove = getBestMove(board, 2);
-//     assert(bestMove == 3);
-//     free(board);
-// }

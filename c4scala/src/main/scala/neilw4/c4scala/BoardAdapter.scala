@@ -27,14 +27,14 @@ class BoardAdapter(context: Context, state: State, parent: View, boardSizeSetter
     var size = 0
 
     def setSize() = {
-            size = if (parent.getHeight / state.height > parent.getWidth / state.width) parent.getWidth / state.width else parent.getHeight / state.height
-            boardSizeSetter.setBoardSize(size * state.width, size * state.height)
+            size = if (parent.getHeight / Board.HEIGHT > parent.getWidth / Board.WIDTH) parent.getWidth / Board.WIDTH else parent.getHeight / Board.HEIGHT
+            boardSizeSetter.setBoardSize(size * Board.WIDTH, size * Board.HEIGHT)
             notifyDataSetChanged()
     }
 
-    override val getCount = state.width * state.height
+    override val getCount = Board.WIDTH * Board.HEIGHT
 
-    override def getItem(position: Int) = state.board(position % state.width)(state.height - position / state.width - 1)
+    override def getItem(position: Int) = state.board(position % Board.WIDTH)(Board.HEIGHT - position / Board.WIDTH - 1)
 
     override def getItemId(position: Int) = position
 
