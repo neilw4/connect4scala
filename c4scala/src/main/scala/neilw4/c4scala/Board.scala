@@ -71,23 +71,27 @@ class Board(board: Array[Array[Piece]]) extends Parcelable {
     def canAdd(piece: Piece, x: Int) =
         piece != BLANK && heights(x) < board(0).length
 
-    def add(piece: Piece, x: Int) : Boolean =
-        if (canAdd(piece, x)) {
-            board(x)(heights(x)) = piece
-            heights(x)+= 1
+    def add(piece: Piece, col: Int) : Boolean =
+        if (canAdd(piece, col)) {
+            val row = heights(col)
+            board(col)(row) = piece
+            heights(col)+= 1
+            listeners.map(_.onBoardPieceChanged(piece, col, row))
             true
         } else false
 
-    def canRemove(x: Int): Boolean = heights(x) > 0
+    def canRemove(col: Int): Boolean = heights(col) > 0
 
-    def remove(x: Int): Boolean =
-        if (canRemove(x)) {
-            heights(x) -= 1
-            board(x)(heights(x)) = BLANK
+    def remove(col: Int): Boolean =
+        if (canRemove(col)) {
+            heights(col) -= 1
+            val row = heights(col)
+            board(col)(row) = BLANK
+            listeners.map(_.onBoardPieceChanged(BLANK, col, row))
             true
         } else false
 
-    def isFull(): Boolean = {
+    def isFull: Boolean = {
         for (colHeight <- heights) {
             if (colHeight < Board.HEIGHT) {
                 return false
@@ -95,4 +99,7 @@ class Board(board: Array[Array[Piece]]) extends Parcelable {
         }
         return true
     }
+
+    // Deep copy.
+    override def clone = new Board(board.map(_.clone()))
 }

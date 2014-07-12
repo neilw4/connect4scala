@@ -34,7 +34,7 @@ class BoardAdapter(context: Context, state: State, parent: View, boardSizeSetter
 
     override val getCount = Board.WIDTH * Board.HEIGHT
 
-    override def getItem(position: Int) = state.board(position % Board.WIDTH)(Board.HEIGHT - position / Board.WIDTH - 1)
+    override def getItem(position: Int) = state.board(column(position))(row(position))
 
     override def getItemId(position: Int) = position
 
@@ -55,5 +55,8 @@ class BoardAdapter(context: Context, state: State, parent: View, boardSizeSetter
         view.setLayoutParams(layout)
         view
     }
+
+    def column(position: Int) = position % Board.WIDTH
+    def row(position: Int) = Board.HEIGHT - position / Board.WIDTH - 1
 
 }

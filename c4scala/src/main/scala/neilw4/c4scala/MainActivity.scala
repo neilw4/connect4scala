@@ -1,15 +1,13 @@
 package neilw4.c4scala
 
 import android.app.Activity
-import android.widget.SeekBar
-import android.widget.TextView
+import android.widget._
 import android.view.View
 import android.view.Menu
 import android.view.ViewGroup.LayoutParams
 import android.view.MenuItem
-import android.widget.GridView
 import android.os.Bundle
-import android.widget.RelativeLayout
+import android.widget.AdapterView.OnItemClickListener
 
 trait UiCallback {
     def onColumnSelected(column: Int)
@@ -52,9 +50,17 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
 
         vBoardGridContainer = findViewById(R.id.board_grid_container)
         vBoardGrid = findViewById(R.id.board_grid).asInstanceOf[GridView]
-        vBoardGridAdapter = new BoardAdapter(this, state, vBoardGridContainer, this)
+        vBoardGridAdapter = new BoardAdapter(MainActivity.this, state, vBoardGridContainer, this)
         vBoardGrid.setNumColumns(Board.WIDTH)
         vBoardGrid.setAdapter(vBoardGridAdapter)
+        vBoardGrid.setOnItemClickListener(new OnItemClickListener {
+            override def onItemClick(parent: AdapterView[_], View: View, position: Int, id: Long): Unit = {
+                val col: Int = parent.getAdapter.asInstanceOf[BoardAdapter].column(position)
+                callback.onColumnSelected(col)
+                android.widget.Toast.makeText(getBaseContext(), col.toString(), Toast.LENGTH_SHORT).show()
+                state.board.add(RED, col)
+            }
+        })
         state.callAllListeners
     }
 

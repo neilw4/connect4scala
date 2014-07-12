@@ -25,7 +25,8 @@ object C4Ai {
 }
 
 
-class C4Ai(board: Board, AiPiece: Piece) {
+class C4Ai(_board: Board, AiPiece: Piece) {
+    val board = _board.clone()
 
     def apply(depth: Int) = negamax(depth, AiPiece, Int.MinValue, Int.MaxValue)._1
 
@@ -63,7 +64,7 @@ class C4Ai(board: Board, AiPiece: Piece) {
                             return (col, bestVal)
                         }
                     } else {
-                        android.util.Log.d(C4Ai.TAG, value + " value <= alpha " + newAlpha)
+                        print(value + " value <= alpha " + newAlpha)
                     }
                 }
                 board.remove(col)
