@@ -13,22 +13,24 @@ object Maths {
     def min(a: Int, b: Int, c: Int, d: Int, e: Int): Int = min(min(a, b, c), min(d, e))
 }
 
-object C4Ai {
+object BoardEvaluator {
     val TAG = this.getClass.toString
 
     val WIN = Int.MaxValue
     val LOSE = Int.MinValue
     val DRAW = Int.MinValue + 1
+    val NO_WIN = 0
 
     // Eval function uses this
     val MAX_MOVES_AWAY = 5
 }
 
 
-class C4Ai(_board: Board, AiPiece: Piece) {
+class BoardEvaluator(_board: Board) {
     val board = _board.clone()
+    val AiPiece = board.nextPiece
 
-    def apply(depth: Int) = negamax(depth, AiPiece, Int.MinValue, Int.MaxValue)._1
+    def adviseMove(depth: Int) = negamax(depth, AiPiece, Int.MinValue, Int.MaxValue)._1
 
     // Implementation of the negamax search algorithm.
     // Returns (col, value).
@@ -46,9 +48,9 @@ class C4Ai(_board: Board, AiPiece: Piece) {
         // Centre pieces are more likely to be good.
         // col = 3, 4, 2, 5, 1, 6, 0.
         for (col <- new ColsFromCentre(Board.WIDTH)) {
-            if (board.add(player, col)) {
-                val endGame: Int = checkWin(col, player)
-                if (endGame != 0) {
+            if (board.add(col)) {
+                val endGame: Int = checkWin(col)
+                if (endGame != BoardEvaluator.NO_WIN) {
                     // Game has ended.
                     return (col, -endGame)
                 }
@@ -168,20 +170,20 @@ class C4Ai(_board: Board, AiPiece: Piece) {
 
     // Checks for a win. Returns INT_MAX for a win,
     // INT_MIN + 1 if it is a draw and 0 if the game hasn't ended.
-    def checkWin(col: Int, lastPlayer: Piece): Int = {
-        if (board.isFull()) {
-            return C4Ai.DRAW
+    def checkWin(col: Int): Int = {
+        if (board.isFull) {
+            return BoardEvaluator.DRAW
         }
         val row = board.heights(col) - 1
 
         for (sequence <- sequencesContaining(col, row)) {
             if (sequence.forall(_._3 == AiPiece)) {
-                return C4Ai.WIN
+                return BoardEvaluator.WIN
             } else if (sequence.forall(_._3 == AiPiece.opposite)) {
-                return C4Ai.LOSE
+                return BoardEvaluator.LOSE
             }
         }
-        0
+        return BoardEvaluator.NO_WIN
     }
 
     // Returns the value of the board from the viewpoint of AiPiece.
@@ -189,7 +191,7 @@ class C4Ai(_board: Board, AiPiece: Piece) {
         var score: Int = 0
 
         for (sequence <- allSequences) {
-            var movesAwayScore: Int = math.pow(Board.WIDTH, C4Ai.MAX_MOVES_AWAY).toInt
+            var movesAwayScore: Int = math.pow(Board.WIDTH, BoardEvaluator.MAX_MOVES_AWAY).toInt
             var player: Piece = BLANK
             breakable {
                 for ((col, row, piece) <- sequence) {
@@ -200,7 +202,7 @@ class C4Ai(_board: Board, AiPiece: Piece) {
                     player = piece
                     breakable {
                         for (rowTemp <- row to 0) {
-                            if (board(col)(rowTemp) == BLANK && row - rowTemp > C4Ai.MAX_MOVES_AWAY) {
+                            if (board(col)(rowTemp) == BLANK && row - rowTemp > BoardEvaluator.MAX_MOVES_AWAY) {
                                 movesAwayScore /= Board.WIDTH
                             } else {
                                 break

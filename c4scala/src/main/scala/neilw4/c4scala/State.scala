@@ -16,7 +16,7 @@ object State {
 trait StateListener {
     def onDifficultyChanged(difficulty: Int)
     def onPlayerAiChanged(playerAi: Boolean, index: Int)
-    def onBoardPieceChanged(piece: Piece, x: Int, y: Int)
+    def onBoardPieceChanged(x: Int, y: Int)
 }
 
 class State(private var _difficulty: Int, private var _playerAi: Array[Boolean], private var _board: Board) extends Parcelable {

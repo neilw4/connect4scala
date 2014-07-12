@@ -57,8 +57,6 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
             override def onItemClick(parent: AdapterView[_], View: View, position: Int, id: Long): Unit = {
                 val col: Int = parent.getAdapter.asInstanceOf[BoardAdapter].column(position)
                 callback.onColumnSelected(col)
-                android.widget.Toast.makeText(getBaseContext(), col.toString(), Toast.LENGTH_SHORT).show()
-                state.board.add(RED, col)
             }
         })
         state.callAllListeners
@@ -115,6 +113,5 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
         vBoardGrid.setLayoutParams(layout)
     }
 
-    override def onBoardPieceChanged(piece: Piece, x: Int, y: Int) = vBoardGridAdapter.notifyDataSetChanged()
-
+    override def onBoardPieceChanged(x: Int, y: Int) = vBoardGridAdapter.notifyDataSetChanged()
 }

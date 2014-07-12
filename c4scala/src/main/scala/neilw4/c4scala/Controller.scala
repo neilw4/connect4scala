@@ -5,7 +5,8 @@ object Controller {
 }
 
 class Controller(mState: State) extends UiCallback {
-    def onColumnSelected(column: Int) = {
-//        new C4Ai()
+    def onColumnSelected(col: Int) = {
+        mState.board.add(col)
+        mState.board.add(new BoardEvaluator(mState.board).adviseMove(3))
     }
 }

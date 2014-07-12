@@ -25,30 +25,38 @@ object Board {
 
                 // TODO: find out why this can't be simpler
                 val board: Array[Array[Piece]] = emptyBoard.map(_.map(x => {
-                    val v: Piece = source.readByte match {
+                    val piece: Piece = source.readByte match {
                         case BLANK.id => BLANK
                         case YELLOW.id => YELLOW
                         case RED.id => RED
                     }
-                    v
+                    piece
                 }))
-                new Board(board)
+                val nextPiece = source.readByte match {
+                    case BLANK.id => BLANK
+                    case YELLOW.id => YELLOW
+                    case RED.id => RED
+                }
+                new Board(board, nextPiece)
             }
         }
     }
 }
 
-class Board(board: Array[Array[Piece]]) extends Parcelable {
+class Board(board: Array[Array[Piece]], _nextPiece: Piece) extends Parcelable {
 
-    def this() = this(Array.fill[Piece](Board.WIDTH, Board.HEIGHT)(BLANK))
+    var nextPiece = _nextPiece
+
+    def this() = this(Array.fill[Piece](Board.WIDTH, Board.HEIGHT)(BLANK), YELLOW)
 
     override def writeToParcel(dest: Parcel, flags: Int) = {
         iterate((piece) => dest.writeByte(piece.id))
+        dest.writeByte(nextPiece.id)
     }
 
     override def describeContents = 0
 
-    private var listeners: mutable.Set[StateListener] = null
+    private var listeners: mutable.Set[StateListener] = new mutable.HashSet[StateListener]()
 
     val heights = board.map(_.takeWhile(BLANK !=).length)
 
@@ -57,26 +65,26 @@ class Board(board: Array[Array[Piece]]) extends Parcelable {
     def apply(i: Int) = board.apply(i)
 
     def attachListeners(listeners: mutable.Set[StateListener]) = {
-        this.listeners = listeners
+        this.listeners ++= listeners
     }
 
     def callAllListeners = {
         Array.tabulate(Board.WIDTH, Board.HEIGHT) (
             (x, y) => listeners.map {
-                _.onBoardPieceChanged(board(x)(y), x, y)
+                _.onBoardPieceChanged(x, y)
             }
         )
     }
 
-    def canAdd(piece: Piece, x: Int) =
-        piece != BLANK && heights(x) < board(0).length
+    def canAdd(col: Int) = heights(col) < board(0).length
 
-    def add(piece: Piece, col: Int) : Boolean =
-        if (canAdd(piece, col)) {
+    def add(col: Int) : Boolean =
+        if (canAdd(col)) {
             val row = heights(col)
-            board(col)(row) = piece
+            board(col)(row) = nextPiece
             heights(col)+= 1
-            listeners.map(_.onBoardPieceChanged(piece, col, row))
+            nextPiece = nextPiece.opposite
+            listeners.map(_.onBoardPieceChanged(col, row))
             true
         } else false
 
@@ -87,7 +95,8 @@ class Board(board: Array[Array[Piece]]) extends Parcelable {
             heights(col) -= 1
             val row = heights(col)
             board(col)(row) = BLANK
-            listeners.map(_.onBoardPieceChanged(BLANK, col, row))
+            nextPiece = nextPiece.opposite
+            listeners.map(_.onBoardPieceChanged(col, row))
             true
         } else false
 
@@ -101,5 +110,5 @@ class Board(board: Array[Array[Piece]]) extends Parcelable {
     }
 
     // Deep copy.
-    override def clone = new Board(board.map(_.clone()))
+    override def clone = new Board(board.map(_.clone()), nextPiece)
 }
