@@ -1,6 +1,7 @@
 package neilw4.c4scala
 
 import scala.util.control.Breaks._
+import scala.collection.Seq
 
 object Maths {
     def max(a: Int, b: Int) = math.max(a, b)
@@ -25,6 +26,66 @@ object C4Ai {
 
 
 class C4Ai(board: Board, AiPiece: Piece) {
+
+    def apply(depth: Int) = negamax(depth, AiPiece, Int.MinValue, Int.MaxValue)._1
+
+    // Implementation of the negamax search algorithm.
+    // Returns (col, value).
+    def negamax(depth: Int, player: Piece, alpha: Int, beta: Int): (Int, Int) = {
+        if (depth == 0) {
+            if (player == AiPiece) {
+                return (-1, eval())
+            } else {
+                return (-1, -eval())
+            }
+        }
+        var newAlpha = alpha
+        var bestVal: Int = Int.MinValue
+        var bestCol: Int = -1
+        // Centre pieces are more likely to be good.
+        // col = 3, 4, 2, 5, 1, 6, 0.
+        for (col <- new ColsFromCentre(Board.WIDTH)) {
+            if (board.add(player, col)) {
+                val endGame: Int = checkWin(col, player)
+                if (endGame != 0) {
+                    // Game has ended.
+                    return (col, -endGame)
+                }
+                // Game hasn't ended.
+                val value = -negamax(depth - 1, player.opposite, -beta, -newAlpha)._2
+                if (value > bestVal) {
+                    bestVal = value
+                    bestCol = col
+                    if (value > newAlpha) {
+                        newAlpha = value
+                        if (newAlpha >= beta) {
+                            board.remove(col)
+                            return (col, bestVal)
+                        }
+                    } else {
+                        android.util.Log.d(C4Ai.TAG, value + " value <= alpha " + newAlpha)
+                    }
+                }
+                board.remove(col)
+            }
+        }
+        (bestCol, bestVal)
+    }
+
+    class ColsFromCentre(val top: Int) extends Iterator[Int] {
+        var current = top / 2
+
+        def hasNext() = current < top
+
+        def next() = {
+            if (current <= top / 2) {
+                current = top - current
+            } else {
+                current = top - current - 1
+            }
+            current
+        }
+    }
 
     class Sequence(val col: Int, val row: Int, val deltaCol: Int, val deltaRow: Int) extends Seq[(Int, Int, Piece)] {
 
