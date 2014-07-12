@@ -1,5 +1,6 @@
 package neilw4.c4scala
 
+import scala.collection.mutable.HashSet
 import scala.collection.mutable.Set
 import android.os.Parcelable
 import android.os.Parcel
@@ -34,7 +35,7 @@ class State(private var _difficulty: Int, private var _playerAi: Array[Boolean],
 
     override def describeContents = 0
 
-    private val listeners: mutable.Set[StateListener] = mutable.Set()
+    private val listeners: Set[StateListener] = HashSet()
 
     def attachListener(listener: StateListener) = {
         listeners += listener

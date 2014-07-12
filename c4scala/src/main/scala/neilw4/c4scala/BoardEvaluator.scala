@@ -103,7 +103,13 @@ class BoardEvaluator(_board: Board) {
         override def iterator = new Iterator[(Int, Int, Piece)] {
             var location = 0
 
-            override def hasNext = location < 4
+            override def hasNext: Boolean = {
+                if (location < 4) {
+                    return false
+                }
+                val (col, row, _) = apply(location)
+                col >= 0 && col < Board.WIDTH && row >= 0 && row < Board.HEIGHT
+            }
 
             override def next() = {
                 val next = apply(location)
