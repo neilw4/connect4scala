@@ -56,7 +56,7 @@ class Board(board: Array[Array[Piece]], _nextPiece: Piece) extends Parcelable {
 
     override def describeContents = 0
 
-    private var listeners: mutable.Set[StateListener] = new mutable.HashSet[StateListener]()
+    private val listeners: mutable.Set[StateListener] = new mutable.HashSet[StateListener]()
 
     val heights = board.map(_.takeWhile(BLANK !=).length)
 
@@ -64,8 +64,12 @@ class Board(board: Array[Array[Piece]], _nextPiece: Piece) extends Parcelable {
 
     def apply(i: Int) = board.apply(i)
 
-    def attachListeners(listeners: mutable.Set[StateListener]) = {
-        this.listeners ++= listeners
+    def attachListener(listener: StateListener) = {
+        this.listeners += listener
+    }
+
+    def removeListener(listener: StateListener) = {
+        this.listeners -= listener
     }
 
     def callAllListeners = {
@@ -84,6 +88,8 @@ class Board(board: Array[Array[Piece]], _nextPiece: Piece) extends Parcelable {
             board(col)(row) = nextPiece
             heights(col)+= 1
             nextPiece = nextPiece.opposite
+            if (listeners.size > 0) {
+            }
             listeners.map(_.onBoardPieceChanged(col, row))
             true
         } else false

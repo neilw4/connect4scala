@@ -198,7 +198,7 @@ int negamax(Board* board, int depth, Piece player, int alpha, int beta, int last
                         break;
                     }
                 } else {
-                    fprintf(stderr, "val <= alpha???\n");
+//                    fprintf(stderr, "val <= alpha???\n");
                 }
             }
             removePiece(board, col);

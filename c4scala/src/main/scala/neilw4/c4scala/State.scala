@@ -4,7 +4,6 @@ import scala.collection.mutable.HashSet
 import scala.collection.mutable.Set
 import android.os.Parcelable
 import android.os.Parcel
-import scala.collection.mutable
 
 object State {
     val KEY = "com.neilw4.c4scala.State"
@@ -39,10 +38,12 @@ class State(private var _difficulty: Int, private var _playerAi: Array[Boolean],
 
     def attachListener(listener: StateListener) = {
         listeners += listener
+        _board.attachListener(listener)
     }
 
     def removeListener(listener: StateListener) = {
         listeners -= listener
+        _board.removeListener(listener)
     }
 
     def callAllListeners = {
@@ -53,7 +54,7 @@ class State(private var _difficulty: Int, private var _playerAi: Array[Boolean],
 
     def newGame = {
         _board = new Board
-        _board.attachListeners(listeners)
+        listeners.foreach(_board.attachListener)
         _board.callAllListeners
     }
 
@@ -69,6 +70,6 @@ class State(private var _difficulty: Int, private var _playerAi: Array[Boolean],
         listeners.map(_.onPlayerAiChanged(_playerAi(index), index))
     }
 
-    _board.attachListeners(listeners)
+    listeners.foreach(_board.attachListener)
     def board = _board
 }
