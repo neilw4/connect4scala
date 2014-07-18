@@ -1,11 +1,14 @@
 package neilw4.c4scala
 
-import android.widget.BaseAdapter
 import android.content.Context
-import android.widget.ImageView
 import android.view.View
 import android.view.ViewGroup
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.util.AttributeSet
 import android.widget.AbsListView
+import android.widget.BaseAdapter
+import android.widget.ImageView
 
 trait BoardSizeSetter {
     def setBoardSize(width: Int, height: Int)
@@ -39,12 +42,11 @@ class BoardAdapter(context: Context, state: State, parent: View, boardSizeSetter
     override def getItemId(position: Int) = position
 
     override def getView(position: Int, convertView: View, group: ViewGroup): View = {
-        var view: ImageView = convertView match {
-            case tView: ImageView => tView
-            case _ => new ImageView(context, null, 0)
+        val view: CircleView = convertView match {
+            case tView: CircleView => tView
+            case _ => new CircleView(context, 0.2)
         }
-        view.setImageResource(getItem(position).resource)
-        view.setScaleType(ImageView.ScaleType.FIT_CENTER)
+        view.setColour(getItem(position).colour)
         var layout = view.getLayoutParams
         if (layout == null) {
             layout = new AbsListView.LayoutParams(size, size)
@@ -58,5 +60,26 @@ class BoardAdapter(context: Context, state: State, parent: View, boardSizeSetter
 
     def column(position: Int) = position % Board.WIDTH
     def row(position: Int) = Board.HEIGHT - position / Board.WIDTH - 1
+}
 
+class CircleView(context: Context, paddingPc: Double) extends View(context) {
+
+    def this(context: Context, attrs: AttributeSet) = this(context, 0)
+
+    var fill: Paint = null
+
+    override def onDraw(canvas: Canvas) = {
+        super.onDraw(canvas)
+        val cx = getWidth() / 2
+        val cy = getHeight() / 2
+        val radius = math.min(cx, cy) * (1 - paddingPc)
+        canvas.drawCircle(cx, cy, radius.asInstanceOf[Int], fill)
+    }
+
+    def setColour(rColour: Int) = {
+        fill = new Paint()
+        fill.setAntiAlias(true)
+        fill.setStyle(Paint.Style.FILL)
+        fill.setColor(getResources.getColor(rColour))
+    }
 }

@@ -4,10 +4,10 @@ import android.os.Parcelable
 import android.os.Parcel
 import scala.collection.mutable
 
-trait Piece {val id: Byte; val resource: Int; val opposite: Piece}
-case object BLANK extends Piece {val id = 0.asInstanceOf[Byte]; val resource = R.drawable.blank; val opposite = BLANK}
-case object YELLOW extends Piece {val id = 1.asInstanceOf[Byte]; val resource = R.drawable.yellow; val opposite = RED}
-case object RED extends Piece {val id = 2.asInstanceOf[Byte]; val resource = R.drawable.red; val opposite = YELLOW}
+trait Piece {val id: Byte; val colour: Int; val opposite: Piece}
+case object BLANK extends Piece {val id = 0.asInstanceOf[Byte]; val colour = R.color.pretty_white; val opposite = BLANK}
+case object YELLOW extends Piece {val id = 1.asInstanceOf[Byte]; val colour = R.color.mild_yellow; val opposite = RED}
+case object RED extends Piece {val id = 2.asInstanceOf[Byte]; val colour = R.color.chilled_red; val opposite = YELLOW}
 
 object Board {
     val TAG = this.getClass.toString
