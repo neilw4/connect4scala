@@ -73,15 +73,15 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
         getMenuInflater.inflate(R.menu.main, menu)
         vPlayerAAiToggle = menu.findItem(R.id.player_A_toggle)
         vPlayerBAiToggle = menu.findItem(R.id.player_B_toggle)
-        Array.tabulate(state.playerAi.length)(i => onPlayerAiChanged(state.playerAi(i), i))
+        state.playerAi.keys.foreach(piece => onPlayerAiChanged(piece, state.playerAi(piece)))
         true
     }
 
     override def onOptionsItemSelected(item: MenuItem): Boolean = {
         item.getItemId match {
             case R.id.new_game => state.newGame
-            case R.id.player_A_toggle => state.setPlayerAi(!state.playerAi(0), 0)
-            case R.id.player_B_toggle => state.setPlayerAi(!state.playerAi(1), 1)
+            case R.id.player_A_toggle => state.setPlayerAi(YELLOW, !state.playerAi(YELLOW))
+            case R.id.player_B_toggle => state.setPlayerAi(RED, !state.playerAi(RED))
         }
         true
     }
@@ -91,12 +91,12 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
         vDifficultyText.setText("Difficulty: " + difficulty)
     }
 
-    override def onPlayerAiChanged(playerAi: Boolean, i: Int) = i match {
-        case 0 => if (vPlayerAAiToggle != null) vPlayerAAiToggle.setIcon(playerAi match {
+    override def onPlayerAiChanged(piece: Piece, isAi: Boolean) = piece match {
+        case YELLOW => if (vPlayerAAiToggle != null) vPlayerAAiToggle.setIcon(isAi match {
             case true => R.drawable.yellow_ai
             case false => R.drawable.yellow_user
         })
-        case 1 => if (vPlayerBAiToggle != null) vPlayerBAiToggle.setIcon(playerAi match {
+        case RED => if (vPlayerBAiToggle != null) vPlayerBAiToggle.setIcon(isAi match {
             case true => R.drawable.red_ai
             case false => R.drawable.red_user
         })

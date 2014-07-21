@@ -4,6 +4,16 @@ import android.os.Parcelable
 import android.os.Parcel
 import scala.collection.mutable
 
+object Piece {
+    def read(source: Parcel) = source.readByte match {
+        case BLANK.id => BLANK
+        case YELLOW.id => YELLOW
+        case RED.id => RED
+    }
+
+    def write(piece: Piece, dest: Parcel) = dest.writeByte(piece.id)
+}
+
 trait Piece {val id: Byte; val colour: Int; val opposite: Piece}
 case object BLANK extends Piece {val id = 0.asInstanceOf[Byte]; val colour = R.color.pretty_white; val opposite = BLANK}
 case object YELLOW extends Piece {val id = 1.asInstanceOf[Byte]; val colour = R.color.mild_yellow; val opposite = RED}
@@ -23,35 +33,21 @@ object Board {
             case _ => {
                 val emptyBoard: Array[Array[Piece]] = Array.ofDim[Piece](Board.WIDTH, Board.HEIGHT)
 
-                // TODO: find out why this can't be simpler
-                val board: Array[Array[Piece]] = emptyBoard.map(_.map(x => {
-                    val piece: Piece = source.readByte match {
-                        case BLANK.id => BLANK
-                        case YELLOW.id => YELLOW
-                        case RED.id => RED
-                    }
-                    piece
-                }))
-                val nextPiece = source.readByte match {
-                    case BLANK.id => BLANK
-                    case YELLOW.id => YELLOW
-                    case RED.id => RED
-                }
+                val board: Array[Array[Piece]] = emptyBoard.map(_.map(x => Piece.read(source).asInstanceOf[Piece]))
+                val nextPiece = Piece.read(source)
                 new Board(board, nextPiece)
             }
         }
     }
 }
 
-class Board(board: Array[Array[Piece]], _nextPiece: Piece) extends Parcelable {
-
-    var nextPiece = _nextPiece
+class Board(board: Array[Array[Piece]], var nextPiece: Piece) extends Parcelable {
 
     def this() = this(Array.fill[Piece](Board.WIDTH, Board.HEIGHT)(BLANK), YELLOW)
 
     override def writeToParcel(dest: Parcel, flags: Int) = {
-        iterate((piece) => dest.writeByte(piece.id))
-        dest.writeByte(nextPiece.id)
+        iterate((piece) => Piece.write(piece, dest))
+        Piece.write(nextPiece, dest)
     }
 
     override def describeContents = 0
