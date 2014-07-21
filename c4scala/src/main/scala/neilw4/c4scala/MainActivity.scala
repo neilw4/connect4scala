@@ -42,7 +42,7 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
 
         vDifficultySeekBar = findViewById(R.id.difficulty_seekbar).asInstanceOf[SeekBar]
         vDifficultySeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener {
-            override def onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) = if (fromUser) state.difficulty = progress
+            override def onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) = if (fromUser) state.difficulty = progress + 1
             override def onStartTrackingTouch(seekBar: SeekBar) = {}
             override def onStopTrackingTouch(seekBar: SeekBar) = {}
         })
@@ -88,7 +88,7 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
 
     override def onDifficultyChanged(difficulty: Int) = {
         vDifficultySeekBar.setProgress(difficulty)
-        vDifficultyText.setText("Difficulty: " + difficulty + "%")
+        vDifficultyText.setText("Difficulty: " + difficulty)
     }
 
     override def onPlayerAiChanged(playerAi: Boolean, i: Int) = i match {

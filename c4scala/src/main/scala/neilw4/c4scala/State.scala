@@ -21,7 +21,7 @@ trait StateListener {
 
 class State(private var _difficulty: Int, private var _playerAi: Array[Boolean], private var _board: Board) extends Parcelable {
 
-    def this() = this(50, Array(false, true), new Board)
+    def this() = this(5, Array(false, true), new Board)
 
     def this(source: Parcel) = this(source.readInt, Array.tabulate[Boolean](source.readInt())(_ => source.readByte == 1), Board.CREATOR.createFromParcel(source))
 
