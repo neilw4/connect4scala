@@ -22,8 +22,8 @@ apply plugin: 'android'
 apply plugin: 'android-scala'
 
 android {
-    compileSdkVersion 19
-    buildToolsVersion "19.1.0"
+    compileSdkVersion 20
+    buildToolsVersion "20"
 
     lintOptions {
         abortOnError false
@@ -31,7 +31,7 @@ android {
 
     defaultConfig {
         minSdkVersion 15
-        targetSdkVersion 19
+        targetSdkVersion 20
     }
 
     buildTypes {
