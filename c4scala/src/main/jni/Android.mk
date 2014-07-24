@@ -1,0 +1,12 @@
+LOCAL_PATH:= $(call my-dir)
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE     := mylib
+LOCAL_CFLAGS     := -Werror -Wall
+LOCAL_SRC_FILES  := C4Ai.c
+
+LOCAL_C_INCLUDES := ${SBT_MANAGED_JNI_INCLUDE}
+LOCAL_LDFLAGS    := -I${SBT_UNMANAGED_BASE}
+
+include $(BUILD_SHARED_LIBRARY)
