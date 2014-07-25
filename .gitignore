@@ -5,3 +5,6 @@
 .DS_Store
 build
 eclipseMvn.tar.xz
+c4scala/.idea
+c4scala/.idea_modules
+c4scala/gen
