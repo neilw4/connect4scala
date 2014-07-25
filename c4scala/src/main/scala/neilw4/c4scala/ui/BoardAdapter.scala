@@ -1,14 +1,14 @@
-package neilw4.c4scala
+package neilw4.c4scala.ui
 
 import android.content.Context
-import android.view.View
-import android.view.ViewGroup
-import android.graphics.Canvas
-import android.graphics.Paint
+import android.graphics.{Canvas, Paint}
 import android.util.AttributeSet
-import android.widget.AbsListView
-import android.widget.BaseAdapter
-import android.widget.ImageView
+import android.view.{View, ViewGroup}
+import android.widget.{AbsListView, BaseAdapter}
+
+import neilw4.c4scala.state.Board
+import neilw4.c4scala.state.State
+import neilw4.c4scala.util.CircleView
 
 trait BoardSizeSetter {
     def setBoardSize(width: Int, height: Int)
@@ -62,24 +62,4 @@ class BoardAdapter(context: Context, state: State, parent: View, boardSizeSetter
     def row(position: Int) = Board.HEIGHT - position / Board.WIDTH - 1
 }
 
-class CircleView(context: Context, paddingPc: Double) extends View(context) {
 
-    def this(context: Context, attrs: AttributeSet) = this(context, 0)
-
-    var fill: Paint = null
-
-    override def onDraw(canvas: Canvas) = {
-        super.onDraw(canvas)
-        val cx = getWidth() / 2
-        val cy = getHeight() / 2
-        val radius = math.min(cx, cy) * (1 - paddingPc)
-        canvas.drawCircle(cx, cy, radius.asInstanceOf[Int], fill)
-    }
-
-    def setColour(rColour: Int) = {
-        fill = new Paint()
-        fill.setAntiAlias(true)
-        fill.setStyle(Paint.Style.FILL)
-        fill.setColor(getResources.getColor(rColour))
-    }
-}

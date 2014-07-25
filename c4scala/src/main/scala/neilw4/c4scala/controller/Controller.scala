@@ -1,4 +1,8 @@
-package neilw4.c4scala
+package neilw4.c4scala.controller
+
+import neilw4.c4scala.ui.UiCallback
+import neilw4.c4scala.state._
+import neilw4.c4scala.util.SimpleAsyncTask
 
 object Controller {
   def TAG = this.getClass.toString
@@ -11,7 +15,7 @@ class Controller(mState: State) extends UiCallback {
     }
 
     class AsyncAiMove(board: Board) extends SimpleAsyncTask[Int] {
-        val evaluator: BoardEvaluator = new BoardEvaluator(board)
+        val evaluator: BoardController = new BoardController(board)
 
         override def doInBackground(): Int = evaluator.adviseMove(3)
 

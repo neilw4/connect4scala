@@ -1,19 +1,14 @@
-package neilw4.c4scala
+package neilw4.c4scala.controller
 
-import scala.util.control.Breaks._
+import neilw4.c4scala.state._
+import neilw4.c4scala.util.Maths
+
 import scala.collection.Seq
+import scala.util.control.Breaks._
 
-object Maths {
-    def max(a: Int, b: Int) = math.max(a, b)
-    def min(a: Int, b: Int) = math.min(a, b)
-    def max(a: Int, b: Int, c: Int): Int = max(max(a, b), c)
-    def min(a: Int, b: Int, c: Int): Int = min(min(a, b), c)
-    def max(a: Int, b: Int, c: Int, d: Int): Int = max(max(a, b), max(c, d))
-    def max(a: Int, b: Int, c: Int, d: Int, e: Int): Int = max(max(a, b, c), max(d, e))
-    def min(a: Int, b: Int, c: Int, d: Int, e: Int): Int = min(min(a, b, c), min(d, e))
-}
 
-object BoardEvaluator {
+
+object BoardController {
     val TAG = this.getClass.toString
 
     val WIN = Int.MaxValue
@@ -26,7 +21,7 @@ object BoardEvaluator {
 }
 
 
-class BoardEvaluator(_board: Board) {
+class BoardController(_board: Board) {
     val board = _board.clone()
     val AiPiece = board.nextPiece
 
@@ -50,7 +45,7 @@ class BoardEvaluator(_board: Board) {
         for (col <- new ColsFromCentre(Board.WIDTH)) {
             if (board.add(col)) {
                 val endGame: Int = checkWin(col)
-                if (endGame != BoardEvaluator.NO_WIN) {
+                if (endGame != BoardController.NO_WIN) {
                     // Game has ended.
                     return (col, -endGame)
                 }
@@ -178,18 +173,18 @@ class BoardEvaluator(_board: Board) {
     // INT_MIN + 1 if it is a draw and 0 if the game hasn't ended.
     def checkWin(col: Int): Int = {
         if (board.isFull) {
-            return BoardEvaluator.DRAW
+            return BoardController.DRAW
         }
         val row = board.heights(col) - 1
 
         for (sequence <- sequencesContaining(col, row)) {
             if (sequence.forall(_._3 == AiPiece)) {
-                return BoardEvaluator.WIN
+                return BoardController.WIN
             } else if (sequence.forall(_._3 == AiPiece.opposite)) {
-                return BoardEvaluator.LOSE
+                return BoardController.LOSE
             }
         }
-        return BoardEvaluator.NO_WIN
+        return BoardController.NO_WIN
     }
 
     // Returns the value of the board from the viewpoint of AiPiece.
@@ -197,7 +192,7 @@ class BoardEvaluator(_board: Board) {
         var score: Int = 0
 
         for (sequence <- allSequences) {
-            var movesAwayScore: Int = math.pow(Board.WIDTH, BoardEvaluator.MAX_MOVES_AWAY).toInt
+            var movesAwayScore: Int = math.pow(Board.WIDTH, BoardController.MAX_MOVES_AWAY).toInt
             var player: Piece = BLANK
             breakable {
                 for ((col, row, piece) <- sequence) {
@@ -208,7 +203,7 @@ class BoardEvaluator(_board: Board) {
                     player = piece
                     breakable {
                         for (rowTemp <- row to 0) {
-                            if (board(col)(rowTemp) == BLANK && row - rowTemp > BoardEvaluator.MAX_MOVES_AWAY) {
+                            if (board(col)(rowTemp) == BLANK && row - rowTemp > BoardController.MAX_MOVES_AWAY) {
                                 movesAwayScore /= Board.WIDTH
                             } else {
                                 break

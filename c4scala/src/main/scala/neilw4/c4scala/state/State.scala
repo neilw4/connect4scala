@@ -1,10 +1,7 @@
-package neilw4.c4scala
+package neilw4.c4scala.state
 
-import scala.collection.mutable.Set
-import scala.collection.mutable.Map
-import scala.collection.mutable.HashMap
-import android.os.Parcelable
-import android.os.Parcel
+import android.os.{Parcel, Parcelable}
+import scala.collection.mutable
 
 object State {
     val KEY = "com.neilw4.c4scala.State"
@@ -15,7 +12,7 @@ object State {
 
     //TODO: make functional
     def mapFromParcel(source: Parcel) = {
-        val m = new HashMap[Piece, Boolean]
+        val m = new mutable.HashMap[Piece, Boolean]
         val size = source.readByte
         for (i <- 0 to size) {
             val piece = Piece.read(source)
@@ -26,15 +23,9 @@ object State {
     }
 }
 
-trait StateListener {
-    def onDifficultyChanged(difficulty: Int)
-    def onPlayerAiChanged(piece: Piece, isAi: Boolean)
-    def onBoardPieceChanged(x: Int, y: Int)
-}
+class State(var difficulty: Int, var playerAi: mutable.Map[Piece, Boolean], var board: Board) extends Parcelable {
 
-class State(var difficulty: Int, var playerAi: Map[Piece, Boolean], var board: Board) extends Parcelable {
-
-    def this() = this(5, Map(RED -> false, YELLOW -> true), new Board)
+    def this() = this(5, mutable.Map(RED -> false, YELLOW -> true), new Board)
 
     def this(source: Parcel) = this(source.readInt, State.mapFromParcel(source), Board.CREATOR.createFromParcel(source))
 
@@ -52,7 +43,7 @@ class State(var difficulty: Int, var playerAi: Map[Piece, Boolean], var board: B
 
     override def describeContents = 0
 
-    private val listeners: Set[StateListener] = Set()
+    private val listeners: mutable.Set[StateListener] = mutable.HashSet()
 
     def attachListener(listener: StateListener) = {
         listeners += listener
@@ -82,7 +73,7 @@ class State(var difficulty: Int, var playerAi: Map[Piece, Boolean], var board: B
 
     def setDifficulty(tDifficulty: Int) = if (tDifficulty != difficulty) {
         difficulty = tDifficulty
-        listeners map {_.onDifficultyChanged(difficulty)}
+        listeners.map{_.onDifficultyChanged(difficulty)}
     }
 
     def setPlayerAi(piece: Piece, isAi: Boolean) = if (isAi != playerAi(piece)) {
@@ -91,4 +82,10 @@ class State(var difficulty: Int, var playerAi: Map[Piece, Boolean], var board: B
     }
 
     listeners.foreach(board.attachListener)
+}
+
+trait StateListener {
+  def onDifficultyChanged(difficulty: Int)
+  def onPlayerAiChanged(piece: Piece, isAi: Boolean)
+  def onBoardPieceChanged(x: Int, y: Int)
 }

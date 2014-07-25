@@ -1,4 +1,4 @@
-package neilw4.c4scala;
+package neilw4.c4scala.util;
 
 import android.os.AsyncTask;
 

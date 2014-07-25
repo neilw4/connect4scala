@@ -1,13 +1,14 @@
-package neilw4.c4scala
+package neilw4.c4scala.ui
 
 import android.app.Activity
-import android.widget._
-import android.view.View
-import android.view.Menu
-import android.view.ViewGroup.LayoutParams
-import android.view.MenuItem
 import android.os.Bundle
+import android.view.ViewGroup.LayoutParams
+import android.view.{Menu, MenuItem, View}
 import android.widget.AdapterView.OnItemClickListener
+import android.widget._
+import neilw4.c4scala.controller.Controller
+import neilw4.c4scala.state._
+import neilw4.c4scala.R
 
 trait UiCallback {
     def onColumnSelected(column: Int)
@@ -42,7 +43,7 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
 
         vDifficultySeekBar = findViewById(R.id.difficulty_seekbar).asInstanceOf[SeekBar]
         vDifficultySeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener {
-            override def onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) = if (fromUser) state.difficulty = progress + 1
+            override def onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) = if (fromUser) state.setDifficulty(progress + 1)
             override def onStartTrackingTouch(seekBar: SeekBar) = {}
             override def onStopTrackingTouch(seekBar: SeekBar) = {}
         })
