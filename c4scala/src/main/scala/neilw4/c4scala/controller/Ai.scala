@@ -63,7 +63,7 @@ class ScalaAi(_board: Board) extends Ai {
                             return (col, bestVal)
                         }
                     } else {
-                        print(value + " value <= alpha " + newAlpha)
+                        println(value + " value <= alpha " + newAlpha)
                     }
                 }
                 board.remove(col)
@@ -126,7 +126,7 @@ class ScalaAi(_board: Board) extends Ai {
         yield new HorizontalSequence(col, row)
 
     private val verticalSequences =
-        for (col <- 0 to Board.WIDTH; row <- 0 to Board.HEIGHT - 4)
+        for (col <- 0 to Board.WIDTH - 1; row <- 0 to Board.HEIGHT - 4)
         yield new VerticalSequence(col, row)
 
     private val diagonal1Sequences =
@@ -134,7 +134,7 @@ class ScalaAi(_board: Board) extends Ai {
         yield new Diagonal1Sequence(col, row)
 
     private val diagonal2Sequences =
-        for (col <- 3 to Board.WIDTH; row <- 0 to Board.HEIGHT - 4)
+        for (col <- 3 to Board.WIDTH - 1; row <- 0 to Board.HEIGHT - 4)
         yield new Diagonal2Sequence(col, row)
 
     val allSequences =

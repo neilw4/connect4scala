@@ -103,14 +103,7 @@ class Board(board: Array[Array[Piece]], var nextPiece: Piece) extends Parcelable
             true
         } else false
 
-    def isFull: Boolean = {
-        for (colHeight <- heights) {
-            if (colHeight < Board.HEIGHT) {
-                return false
-            }
-        }
-        return true
-    }
+    def isFull: Boolean = !heights.exists(_ < Board.HEIGHT)
 
     // Deep copy.
     override def clone = new Board(board.map(_.clone()), nextPiece)

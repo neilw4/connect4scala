@@ -1,8 +1,5 @@
 package neilw4.c4scala.util
 
-/**
- * Created by neilw4 on 25/07/14.
- */
 object Maths {
      def max(a: Int, b: Int) = math.max(a, b)
      def min(a: Int, b: Int) = math.min(a, b)
