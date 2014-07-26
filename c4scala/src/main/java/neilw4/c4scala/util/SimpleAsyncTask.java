@@ -12,13 +12,13 @@ import android.os.AsyncTask;
  * Our solution: the Java method doInBackground(V... args) forwards
  * the call to the Scala method doInBackground().
  */
-public abstract class SimpleAsyncTask<V> extends AsyncTask<Void, Void, V> {
+public abstract class SimpleAsyncTask<U, V> extends AsyncTask<U, Void, V> {
 
-    protected abstract V doInBackground();
+    protected abstract V doInBackground(U arg);
 
     @Override
-    protected V doInBackground(Void... args) {
-        return doInBackground();
+    protected V doInBackground(U... args) {
+        return doInBackground(args.length > 0 ? args[0]: null);
     }
 
 }

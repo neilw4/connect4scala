@@ -25,9 +25,11 @@ object State {
 
 class State(var difficulty: Int, var playerAi: mutable.Map[Piece, Boolean], var board: Board) extends Parcelable {
 
-    def this() = this(5, mutable.Map(RED -> false, YELLOW -> true), new Board)
+    def this() = this(5, mutable.Map(RED -> true, YELLOW -> false), new Board)
 
     def this(source: Parcel) = this(source.readInt, State.mapFromParcel(source), Board.CREATOR.createFromParcel(source))
+
+    var thinking: Boolean = false
 
     override def writeToParcel(dest: Parcel, flags: Int) = {
         dest.writeInt(difficulty)

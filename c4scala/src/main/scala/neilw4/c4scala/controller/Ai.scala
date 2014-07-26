@@ -7,21 +7,23 @@ import scala.collection.Seq
 import scala.util.control.Breaks._
 
 
-
-object BoardController {
-    val TAG = this.getClass.toString
-
-    val WIN = Int.MaxValue
-    val LOSE = Int.MinValue
-    val DRAW = Int.MinValue + 1
-    val NO_WIN = 0
-
-    // Eval function uses this
-    val MAX_MOVES_AWAY = 5
+trait Ai {
+        def adviseMove(depth: Int): Int
 }
 
+object ScalaAi {
+  val TAG = this.getClass.toString
 
-class BoardController(_board: Board) {
+  val WIN = Int.MaxValue
+  val LOSE = Int.MinValue
+  val DRAW = Int.MinValue + 1
+  val NO_WIN = 0
+
+  // Eval function uses this
+  val MAX_MOVES_AWAY = 5
+}
+
+class ScalaAi(_board: Board) extends Ai {
     val board = _board.clone()
     val AiPiece = board.nextPiece
 
@@ -45,7 +47,7 @@ class BoardController(_board: Board) {
         for (col <- new ColsFromCentre(Board.WIDTH)) {
             if (board.add(col)) {
                 val endGame: Int = checkWin(col)
-                if (endGame != BoardController.NO_WIN) {
+                if (endGame != ScalaAi.NO_WIN) {
                     // Game has ended.
                     return (col, -endGame)
                 }
@@ -85,7 +87,7 @@ class BoardController(_board: Board) {
         }
     }
 
-    class Sequence(val col: Int, val row: Int, val deltaCol: Int, val deltaRow: Int) extends Seq[(Int, Int, Piece)] {
+    class Sequence(val col: Int, val row: Int, val deltaCol: Int, val deltaRow: Int) extends IndexedSeq[(Int, Int, Piece)] {
 
         override def apply(offset: Int) = {
             val newCol = col + offset * deltaCol
@@ -93,29 +95,19 @@ class BoardController(_board: Board) {
             (newCol, newRow, board(newCol)(newRow))
         }
 
-        override def length = Maths.min(4, 1 - col, Board.WIDTH - col, 1 - row, Board.HEIGHT - row)
-
-        override def iterator = new Iterator[(Int, Int, Piece)] {
-            var location = 0
-
-            override def hasNext: Boolean = {
-                if (location < 4) {
-                    return false
-                }
-                val (col, row, _) = apply(location)
-                col >= 0 && col < Board.WIDTH && row >= 0 && row < Board.HEIGHT
-            }
-
-            override def next() = {
-                val next = apply(location)
-                location += 1
-                next
-            }
-
-            override def size = length
-
+        val maxWidth = deltaCol match {
+            case -1 => col
+            case 0 => 4
+            case 1 => Board.WIDTH - col
         }
 
+        val maxHeight = deltaRow match {
+            case -1 => row
+            case 0 => 4
+            case 1 => Board.HEIGHT - row
+        }
+
+        val length = Maths.min(4, maxWidth, maxHeight)
     }
 
     class HorizontalSequence(col: Int, row: Int) extends Sequence(col, row, 0, 1) {}
@@ -173,18 +165,23 @@ class BoardController(_board: Board) {
     // INT_MIN + 1 if it is a draw and 0 if the game hasn't ended.
     def checkWin(col: Int): Int = {
         if (board.isFull) {
-            return BoardController.DRAW
+            return ScalaAi.DRAW
         }
         val row = board.heights(col) - 1
 
         for (sequence <- sequencesContaining(col, row)) {
+//            var y: (Int, Int, Piece) = null
+//            for (x <- sequence) {
+//                y = x
+//            }
+
             if (sequence.forall(_._3 == AiPiece)) {
-                return BoardController.WIN
+                return ScalaAi.WIN
             } else if (sequence.forall(_._3 == AiPiece.opposite)) {
-                return BoardController.LOSE
+                return ScalaAi.LOSE
             }
         }
-        return BoardController.NO_WIN
+        return ScalaAi.NO_WIN
     }
 
     // Returns the value of the board from the viewpoint of AiPiece.
@@ -192,7 +189,7 @@ class BoardController(_board: Board) {
         var score: Int = 0
 
         for (sequence <- allSequences) {
-            var movesAwayScore: Int = math.pow(Board.WIDTH, BoardController.MAX_MOVES_AWAY).toInt
+            var movesAwayScore: Int = math.pow(Board.WIDTH, ScalaAi.MAX_MOVES_AWAY).toInt
             var player: Piece = BLANK
             breakable {
                 for ((col, row, piece) <- sequence) {
@@ -203,7 +200,7 @@ class BoardController(_board: Board) {
                     player = piece
                     breakable {
                         for (rowTemp <- row to 0) {
-                            if (board(col)(rowTemp) == BLANK && row - rowTemp > BoardController.MAX_MOVES_AWAY) {
+                            if (board(col)(rowTemp) == BLANK && row - rowTemp > ScalaAi.MAX_MOVES_AWAY) {
                                 movesAwayScore /= Board.WIDTH
                             } else {
                                 break
@@ -220,4 +217,5 @@ class BoardController(_board: Board) {
         }
         score
     }
+
 }
