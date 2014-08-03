@@ -3,7 +3,6 @@ package neilw4.c4scala.controller
 import neilw4.c4scala.state._
 import neilw4.c4scala.util.Maths
 
-import scala.collection.Seq
 import scala.util.control.Breaks._
 
 
@@ -44,7 +43,7 @@ class ScalaAi(_board: Board) extends Ai {
         var bestCol: Int = -1
         // Centre pieces are more likely to be good.
         // col = 3, 4, 2, 5, 1, 6, 0.
-        for (col <- new ColsFromCentre(Board.WIDTH)) {
+        for (col <- colsFromCentre) {
             if (board.add(col)) {
                 val endGame: Int = checkWin(col)
                 if (endGame != ScalaAi.NO_WIN) {
@@ -62,8 +61,6 @@ class ScalaAi(_board: Board) extends Ai {
                             board.remove(col)
                             return (col, bestVal)
                         }
-                    } else {
-                        println(value + " value <= alpha " + newAlpha)
                     }
                 }
                 board.remove(col)
@@ -72,20 +69,7 @@ class ScalaAi(_board: Board) extends Ai {
         (bestCol, bestVal)
     }
 
-    class ColsFromCentre(val top: Int) extends Iterator[Int] {
-        var current = top / 2
-
-        def hasNext() = current < top
-
-        def next() = {
-            if (current <= top / 2) {
-                current = top - current
-            } else {
-                current = top - current - 1
-            }
-            current
-        }
-    }
+    val colsFromCentre = List(3, 4, 2, 5, 1, 6, 0)
 
     class Sequence(val col: Int, val row: Int, val deltaCol: Int, val deltaRow: Int) extends IndexedSeq[(Int, Int, Piece)] {
 
@@ -95,19 +79,7 @@ class ScalaAi(_board: Board) extends Ai {
             (newCol, newRow, board(newCol)(newRow))
         }
 
-        val maxWidth = deltaCol match {
-            case -1 => col
-            case 0 => 4
-            case 1 => Board.WIDTH - col
-        }
-
-        val maxHeight = deltaRow match {
-            case -1 => row
-            case 0 => 4
-            case 1 => Board.HEIGHT - row
-        }
-
-        val length = Maths.min(4, maxWidth, maxHeight)
+        val length = 4
     }
 
     class HorizontalSequence(col: Int, row: Int) extends Sequence(col, row, 1, 0) {}
