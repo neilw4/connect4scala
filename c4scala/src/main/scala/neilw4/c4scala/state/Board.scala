@@ -23,10 +23,25 @@ object Piece {
 
 }
 
-trait Piece {val id: Byte; val colour: Int; val opposite: Piece}
-case object BLANK extends Piece {val id = 0.asInstanceOf[Byte]; val colour = R.color.pretty_white; val opposite = BLANK}
-case object YELLOW extends Piece {val id = 1.asInstanceOf[Byte]; val colour = R.color.mild_yellow; val opposite = RED}
-case object RED extends Piece {val id = 2.asInstanceOf[Byte]; val colour = R.color.chilled_red; val opposite = YELLOW}
+trait Piece {val id: Byte; val colour: Int; val win_text: Int; val opposite: Piece}
+case object BLANK extends Piece {
+    val id = 0.asInstanceOf[Byte]
+    val colour = R.color.pretty_white
+    val win_text = R.string.draw
+    val opposite = BLANK
+}
+case object YELLOW extends Piece {
+    val id = 1.asInstanceOf[Byte]
+    val colour = R.color.mild_yellow
+    val win_text = R.string.yellow_win
+    val opposite = RED
+}
+case object RED extends Piece {
+    val id = 2.asInstanceOf[Byte]
+    val colour = R.color.chilled_red
+    val win_text = R.string.red_win
+    val opposite = YELLOW
+}
 
 object Board {
     val TAG = this.getClass.toString

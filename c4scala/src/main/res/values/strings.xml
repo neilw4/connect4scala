@@ -5,5 +5,8 @@
     <string name="new_game">New Game</string>
     <string name="player_A_toggle">Player A</string>
     <string name="player_B_toggle">Player B</string>
+    <string name="red_win">Red won!</string>
+    <string name="yellow_win">Yellow won!</string>
+    <string name="draw">Draw!</string>
 
 </resources>
