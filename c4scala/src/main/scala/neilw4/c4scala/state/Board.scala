@@ -6,13 +6,21 @@ import neilw4.c4scala.R
 import scala.collection.mutable
 
 object Piece {
+    val NONE_ID: Byte = 678.asInstanceOf[Byte]
+
     def read(source: Parcel) = source.readByte match {
         case BLANK.id => BLANK
         case YELLOW.id => YELLOW
         case RED.id => RED
+        case NONE_ID => null
     }
 
-    def write(piece: Piece, dest: Parcel) = dest.writeByte(piece.id)
+    def write(piece: Piece, dest: Parcel): Unit = dest.writeByte(piece.id)
+    def write(winner: Option[Piece], dest: Parcel): Unit = winner match {
+        case None => dest.writeByte(NONE_ID)
+        case Some(piece) => Piece.write(piece, dest)
+    }
+
 }
 
 trait Piece {val id: Byte; val colour: Int; val opposite: Piece}
@@ -36,19 +44,21 @@ object Board {
 
                 val board: Array[Array[Piece]] = emptyBoard.map(_.map(x => Piece.read(source).asInstanceOf[Piece]))
                 val nextPiece = Piece.read(source)
-                new Board(board, nextPiece)
+                val winner = Option(Piece.read(source))
+                new Board(board, nextPiece, winner)
             }
         }
     }
 }
 
-class Board(board: Array[Array[Piece]], var nextPiece: Piece) extends Parcelable {
+class Board(board: Array[Array[Piece]], var nextPiece: Piece, var winner: Option[Piece]) extends Parcelable {
 
-    def this() = this(Array.fill[Piece](Board.WIDTH, Board.HEIGHT)(BLANK), YELLOW)
+    def this() = this(Array.fill[Piece](Board.WIDTH, Board.HEIGHT)(BLANK), YELLOW, None)
 
     override def writeToParcel(dest: Parcel, flags: Int) = {
         iterate((piece) => Piece.write(piece, dest))
         Piece.write(nextPiece, dest)
+        Piece.write(winner, dest)
     }
 
     override def describeContents = 0
@@ -105,6 +115,14 @@ class Board(board: Array[Array[Piece]], var nextPiece: Piece) extends Parcelable
 
     def isFull: Boolean = !heights.exists(_ < Board.HEIGHT)
 
+    def setWinner(winner: Option[Piece]) = if(winner != this.winner) {
+        this.winner = winner
+        winner match {
+            case Some(piece) => listeners.map(_.onGameEnd(piece))
+            case None => {}
+        }
+    }
+
     // Deep copy.
-    override def clone = new Board(board.map(_.clone()), nextPiece)
+    override def clone = new Board(board.map(_.clone()), nextPiece, winner)
 }

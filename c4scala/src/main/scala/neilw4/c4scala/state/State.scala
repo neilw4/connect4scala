@@ -83,6 +83,10 @@ class State(var difficulty: Int, var playerAi: mutable.Map[Piece, Boolean], var 
         listeners.map(_.onPlayerAiChanged(piece, isAi))
     }
 
+    def setThinking(tThinking: Boolean) = {
+        thinking = tThinking
+    }
+
     listeners.foreach(board.attachListener)
 }
 
@@ -90,4 +94,5 @@ trait StateListener {
   def onDifficultyChanged(difficulty: Int)
   def onPlayerAiChanged(piece: Piece, isAi: Boolean)
   def onBoardPieceChanged(x: Int, y: Int)
+  def onGameEnd(winner: Piece)
 }

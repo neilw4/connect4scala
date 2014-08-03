@@ -115,4 +115,8 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
     }
 
     override def onBoardPieceChanged(x: Int, y: Int) = vBoardGridAdapter.notifyDataSetChanged()
+
+    override def onGameEnd(winner: Piece) = {
+        Toast.makeText(getBaseContext, winner.toString, Toast.LENGTH_LONG).show()
+    }
 }

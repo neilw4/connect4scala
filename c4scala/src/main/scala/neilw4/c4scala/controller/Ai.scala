@@ -39,8 +39,8 @@ class ScalaAi(_board: Board) extends Ai {
             }
         }
         var newAlpha = alpha
-        var bestVal: Int = Int.MinValue
-        var bestCol: Int = -1
+        var bestVal = Int.MinValue
+        var bestCol = -1
         // Centre pieces are more likely to be good.
         // col = 3, 4, 2, 5, 1, 6, 0.
         for (col <- colsFromCentre) {
