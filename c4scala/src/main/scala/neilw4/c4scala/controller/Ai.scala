@@ -110,9 +110,9 @@ class ScalaAi(_board: Board) extends Ai {
         val length = Maths.min(4, maxWidth, maxHeight)
     }
 
-    class HorizontalSequence(col: Int, row: Int) extends Sequence(col, row, 0, 1) {}
+    class HorizontalSequence(col: Int, row: Int) extends Sequence(col, row, 1, 0) {}
 
-    class VerticalSequence(col: Int, row: Int) extends Sequence(col, row, 1, 0) {}
+    class VerticalSequence(col: Int, row: Int) extends Sequence(col, row, 0, 1) {}
 
     class Diagonal1Sequence(col: Int, row: Int) extends Sequence(col, row, 1, 1) {}
 
@@ -122,7 +122,7 @@ class ScalaAi(_board: Board) extends Ai {
     def getCount(sequence: Sequence, piece: Piece) = sequence.takeWhile(_._3 == piece).size
 
     private val horizontalSequences =
-        for (col <- 0 to Board.WIDTH - 4; row <- 0 to Board.HEIGHT)
+        for (col <- 0 to Board.WIDTH - 4; row <- 0 to Board.HEIGHT - 1)
         yield new HorizontalSequence(col, row)
 
     private val verticalSequences =
@@ -142,20 +142,20 @@ class ScalaAi(_board: Board) extends Ai {
 
     //TODO: memoise
     private def horizontalSequencesContaining(col: Int, row: Int): IndexedSeq[Sequence] =
-        for (offset <- Maths.max(-3, -col) to Maths.min(3, Board.WIDTH - col - 1))
+        for (offset <- Maths.max(-3, -col) to Maths.min(0, Board.WIDTH - 4 - col))
         yield new HorizontalSequence(col + offset, row)
 
     private def verticalSequencesContaining(col: Int, row: Int): IndexedSeq[Sequence] =
-        for (offset <- Maths.max(-3, -row) to Maths.min(3, Board.HEIGHT - row - 1))
+        for (offset <- Maths.max(-3, -row) to Maths.min(0, Board.HEIGHT - 4 - row))
         yield new VerticalSequence(col, row + offset)
 
     private def diagonal1SequencesContaining(col: Int, row: Int): IndexedSeq[Sequence] =
-        for (offset <- Maths.max(-3, -row, -col) to Maths.min(3, Board.HEIGHT - row - 1, Board.WIDTH - col - 1))
-        yield new Diagonal1Sequence(col, row)
+        for (offset <- Maths.max(-3, -row, -col) to Maths.min(0, Board.HEIGHT - 4 - row, Board.WIDTH - 4 - col))
+        yield new Diagonal1Sequence(col + offset, row + offset)
 
     private def diagonal2SequencesContaining(col: Int, row: Int): IndexedSeq[Sequence] =
-        for (offset <- Maths.max(-3, Board.HEIGHT - row - 1, -col) to Maths.min(3, -row, Board.WIDTH - col))
-        yield new Diagonal2Sequence(col, row)
+        for (offset <- Maths.max(-3, -row, 4 + col - Board.HEIGHT) to Maths.min(0, col - 3, Board.HEIGHT - 4 - row))
+        yield new Diagonal2Sequence(col - offset, row + offset)
 
     def sequencesContaining(col: Int, row: Int) =
         horizontalSequencesContaining(col, row) ++ verticalSequencesContaining(col, row) ++ diagonal1SequencesContaining(col, row) ++ diagonal2SequencesContaining(col, row)
@@ -168,12 +168,6 @@ class ScalaAi(_board: Board) extends Ai {
             return ScalaAi.DRAW
         }
         val row = board.heights(col) - 1
-
-        for (sequence <- sequencesContaining(col, row)) {
-//            var y: (Int, Int, Piece) = null
-//            for (x <- sequence) {
-//                y = x
-//            }
 
             if (sequence.forall(_._3 == AiPiece)) {
                 return ScalaAi.WIN
