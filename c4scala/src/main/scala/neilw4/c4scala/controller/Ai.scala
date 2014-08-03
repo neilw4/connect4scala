@@ -169,6 +169,7 @@ class ScalaAi(_board: Board) extends Ai {
         }
         val row = board.heights(col) - 1
 
+        for (sequence <- sequencesContaining(col, row)) {
             if (sequence.forall(_._3 == AiPiece)) {
                 return ScalaAi.WIN
             } else if (sequence.forall(_._3 == AiPiece.opposite)) {
