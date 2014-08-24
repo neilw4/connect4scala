@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="neilw4.c4scala" >
+    package="neilw4.c4scala"
+    android:versionCode="1"
+    android:versionName="0.3" >
 
     <application
         android:allowBackup="true"
