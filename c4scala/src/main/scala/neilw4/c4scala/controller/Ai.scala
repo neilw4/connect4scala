@@ -14,59 +14,57 @@ object ScalaAi {
   val TAG = this.getClass.toString
 
   val WIN = Int.MaxValue
-  val LOSE = Int.MinValue
-  val DRAW = Int.MinValue + 1
+  val LOSE = -WIN
+  val DRAW = 0
   val NO_WIN = 0
 
   // Eval function uses this
   val MAX_MOVES_AWAY = 5
 }
 
-class ScalaAi(_board: Board) extends Ai {
-    val board = _board.clone()
-    val AiPiece = board.nextPiece
+class ScalaAi(var board: Board) extends Ai {
+    board = board.clone()
 
-    def adviseMove(depth: Int) = negamax(depth, AiPiece, Int.MinValue, Int.MaxValue)._1
+    def adviseMove(depth: Int) = negamax(depth, None, -Int.MaxValue, Int.MaxValue)._1
 
-    // Implementation of the negamax search algorithm.
-    // Returns (col, value).
-    def negamax(depth: Int, player: Piece, alpha: Int, beta: Int): (Int, Int) = {
-        if (depth == 0) {
-            if (player == AiPiece) {
-                return (-1, eval())
-            } else {
-                return (-1, -eval())
+    def negamax(depth: Int, lastCol: Option[Int], alpha: Int, beta: Int): (Int, Int) = {
+        if (lastCol.isDefined) {
+            val winner = checkWin(lastCol.get)
+            if (winner.isDefined) {
+                val score = winner.get match {
+                    case BLANK => ScalaAi.DRAW // Draw is equally bad for both players.
+                    case _ => ScalaAi.LOSE // Losing is bad.
+                }
+                println(s"$depth endgame score $score, (eval ${eval(board.nextPiece)})")
+                return (-1, score)
             }
         }
-        var newAlpha = alpha
-        var bestVal = Int.MinValue
-        var bestCol = -1
-        // Centre pieces are more likely to be good.
-        // col = 3, 4, 2, 5, 1, 6, 0.
+
+        if (depth == 0) {
+            println(s"$depth leaf eval_score ${eval(board.nextPiece)}")
+            return (-1, eval(board.nextPiece))
+        }
+
+        var bestScore = alpha
+        var bestCol: Int = -1
         for (col <- colsFromCentre) {
-            if (board.add(col)) {
-                val endGame: Int = checkWin(col)
-                if (endGame != ScalaAi.NO_WIN) {
-                    // Game has ended.
-                    return (col, -endGame)
-                }
-                // Game hasn't ended.
-                val value = -negamax(depth - 1, player.opposite, -beta, -newAlpha)._2
-                if (value > bestVal) {
-                    bestVal = value
+            if(board.add(col)) {
+                val score = -negamax(depth - 1, Some(col), -beta, -bestScore)._2
+                board.remove(col)
+                println(s"$depth col $col score $score best $bestScore")
+                if (score > bestScore) {
+                    bestScore = score
                     bestCol = col
-                    if (value > newAlpha) {
-                        newAlpha = value
-                        if (newAlpha >= beta) {
-                            board.remove(col)
-                            return (col, bestVal)
-                        }
+                    if (score >= beta) {
+                        println(s"$depth col $col BETA $beta score $score")
+                        //TODO: fix alpha-beta
+                        //return (bestCol, score)
                     }
                 }
-                board.remove(col)
             }
         }
-        (bestCol, bestVal)
+        println(s"$depth ALL col $bestCol score $bestScore")
+        return (bestCol, bestScore)
     }
 
     val colsFromCentre = List(3, 4, 2, 5, 1, 6, 0)
@@ -126,63 +124,61 @@ class ScalaAi(_board: Board) extends Ai {
         yield new Diagonal1Sequence(col + offset, row + offset)
 
     private def diagonal2SequencesContaining(col: Int, row: Int): IndexedSeq[Sequence] =
-        for (offset <- Maths.max(-3, -row, 4 + col - Board.HEIGHT) to Maths.min(0, col - 3, Board.HEIGHT - 4 - row))
+        for (offset <- Maths.max(-3, -row, 1 + col - Board.WIDTH) to Maths.min(0, col - 3, Board.HEIGHT - 4 - row))
         yield new Diagonal2Sequence(col - offset, row + offset)
 
     def sequencesContaining(col: Int, row: Int) =
         horizontalSequencesContaining(col, row) ++ verticalSequencesContaining(col, row) ++ diagonal1SequencesContaining(col, row) ++ diagonal2SequencesContaining(col, row)
 
 
-    // Checks for a win. Returns INT_MAX for a win,
-    // INT_MIN + 1 if it is a draw and 0 if the game hasn't ended.
-    def checkWin(col: Int): Int = {
+    def checkWin(col: Int): Option[Piece] = {
         if (board.isFull) {
-            return ScalaAi.DRAW
+            return Some(BLANK)
         }
         val row = board.heights(col) - 1
+        val piece = board(col)(row)
 
         for (sequence <- sequencesContaining(col, row)) {
-            if (sequence.forall(_._3 == AiPiece)) {
-                return ScalaAi.WIN
-            } else if (sequence.forall(_._3 == AiPiece.opposite)) {
-                return ScalaAi.LOSE
+            if (sequence.forall(_._3 == piece)) {
+                return Some(piece)
             }
         }
-        return ScalaAi.NO_WIN
+        return None
     }
 
-    // Returns the value of the board from the viewpoint of AiPiece.
-    def eval(): Int = {
-        var score: Int = 0
+    // Returns the value of the board from the viewpoint of a piece.
+    def eval(viewPoint: Piece): Int = {
+        var totalScore: Int = 0
 
         for (sequence <- allSequences) {
-            var movesAwayScore: Int = math.pow(Board.WIDTH, ScalaAi.MAX_MOVES_AWAY).toInt
+            var score: Int = math.pow(Board.WIDTH, ScalaAi.MAX_MOVES_AWAY).toInt
             var player: Piece = BLANK
             breakable {
                 for ((col, row, piece) <- sequence) {
                     if (piece == player.opposite) {
-                        movesAwayScore = 0
+                        score = 0
                         break
                     }
                     player = piece
                     breakable {
                         for (rowTemp <- row to 0) {
                             if (board(col)(rowTemp) == BLANK && row - rowTemp > ScalaAi.MAX_MOVES_AWAY) {
-                                movesAwayScore /= Board.WIDTH
+                                score /= Board.WIDTH
                             } else {
                                 break
                             }
                         }
                     }
-                    if (player == AiPiece) {
-                        score += movesAwayScore
-                    } else {
-                        score -= movesAwayScore
+                    val multiplier = player match {
+                        case `viewPoint` => 1
+                        case BLANK => 0
+                        case _ => -1
                     }
+                    totalScore += multiplier * score
                 }
             }
         }
-        score
+        totalScore
     }
 
 }

@@ -23,12 +23,7 @@ class Controller(state: State) extends UiCallback with MoveCallback {
         }
     }
 
-    def checkWin(lastCol: Int): Option[Piece] = new ScalaAi(state.board).checkWin(lastCol) match {
-        case ScalaAi.NO_WIN => None
-        case ScalaAi.DRAW => Some(BLANK)
-        case ScalaAi.WIN => Some(state.board.nextPiece)
-        case ScalaAi.LOSE => Some(state.board.nextPiece.opposite)
-    }
+    def checkWin(lastCol: Int) = new ScalaAi(state.board).checkWin(lastCol)
 }
 
 
