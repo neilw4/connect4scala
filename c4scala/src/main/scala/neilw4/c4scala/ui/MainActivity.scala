@@ -84,6 +84,7 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
         vPlayerAAiToggle = menu.findItem(R.id.player_A_toggle)
         vPlayerBAiToggle = menu.findItem(R.id.player_B_toggle)
         state.playerAi.keys.foreach(piece => onPlayerAiChanged(piece, state.playerAi(piece)))
+        getActionBar.setHomeButtonEnabled(false)
         true
     }
 
