@@ -1,6 +1,7 @@
 package neilw4.c4scala.ui
 
 import android.app.Activity
+import android.graphics.{PorterDuffColorFilter, PorterDuff}
 import android.os.Bundle
 import android.view.ViewGroup.LayoutParams
 import android.view.{Menu, MenuItem, View}
@@ -47,6 +48,8 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
             override def onStartTrackingTouch(seekBar: SeekBar) = {}
             override def onStopTrackingTouch(seekBar: SeekBar) = {}
         })
+        setSeekBarColor(vDifficultySeekBar, R.color.succulent_green)
+
         vDifficultyText = findViewById(R.id.difficulty_text).asInstanceOf[TextView]
 
         vBoardGridContainer = findViewById(R.id.board_grid_container)
@@ -61,6 +64,12 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
             }
         })
         state.callAllListeners
+    }
+
+    def setSeekBarColor(seekBar: SeekBar, colour: Int) = {
+        val filter = new PorterDuffColorFilter(getResources.getColor(colour), PorterDuff.Mode.SRC_IN)
+        seekBar.getProgressDrawable.setColorFilter(filter)
+        seekBar.getThumb.setColorFilter(filter)
     }
 
     override def onDestroy() = {

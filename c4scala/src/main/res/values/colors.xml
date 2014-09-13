@@ -3,5 +3,6 @@
     <color name="background_blue">#33B5E5</color>
     <color name="chilled_red">#F03131</color>
     <color name="mild_yellow">#FFBB33</color>
+    <color name="succulent_green">#4CAF50</color>
     <color name="pretty_white">#FFFFFF</color>
 </resources>
