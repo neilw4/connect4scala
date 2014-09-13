@@ -1,4 +1,5 @@
 APK_HOME=c4scala/build/outputs/apk
+gradle clean &&
 gradle assembleRelease &&
 cp ${APK_HOME}/c4scala-release-unsigned.apk ${APK_HOME}/c4scala-release-signed.apk &&
 cat pass | jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore c4-release-key.keystore ${APK_HOME}/c4scala-release-signed.apk c4key &&
