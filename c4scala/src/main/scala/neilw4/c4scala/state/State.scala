@@ -29,7 +29,7 @@ class State(var difficulty: Int, var playerAi: mutable.Map[Piece, Boolean], var 
 
     def this(source: Parcel) = this(source.readInt, State.mapFromParcel(source), Board.CREATOR.createFromParcel(source))
 
-    var thinking: Boolean = false
+    var aiThinking: Option[Piece] = None
 
     override def writeToParcel(dest: Parcel, flags: Int) = {
         dest.writeInt(difficulty)
@@ -61,6 +61,10 @@ class State(var difficulty: Int, var playerAi: mutable.Map[Piece, Boolean], var 
         listeners.foreach {
             _.onDifficultyChanged(difficulty)
         }
+        aiThinking match {
+            case None => listeners.foreach(_.onStopThinking())
+            case Some(piece) => listeners.foreach(_.onStartThinking(piece))
+        }
         playerAi.foreach {
             case (piece, isAi) => listeners.foreach(_.onPlayerAiChanged(piece, isAi))
         }
@@ -70,21 +74,28 @@ class State(var difficulty: Int, var playerAi: mutable.Map[Piece, Boolean], var 
     def newGame = {
         board = new Board
         listeners.foreach(board.attachListener)
+        stopThinking()
         board.callAllListeners
     }
 
     def setDifficulty(tDifficulty: Int) = if (tDifficulty != difficulty) {
         difficulty = tDifficulty
-        listeners.map{_.onDifficultyChanged(difficulty)}
+        listeners.foreach(_.onDifficultyChanged(difficulty))
     }
 
     def setPlayerAi(piece: Piece, isAi: Boolean) = if (isAi != playerAi(piece)) {
         playerAi(piece) = isAi
-        listeners.map(_.onPlayerAiChanged(piece, isAi))
+        listeners.foreach(_.onPlayerAiChanged(piece, isAi))
     }
 
-    def setThinking(tThinking: Boolean) = {
-        thinking = tThinking
+    def startThinking(aiPiece: Piece) = {
+        aiThinking = Some(aiPiece)
+      listeners.foreach(_.onStartThinking(aiPiece))
+    }
+
+    def stopThinking() = {
+      aiThinking = None
+      listeners.foreach(_.onStopThinking())
     }
 
     listeners.foreach(board.attachListener)
@@ -95,4 +106,6 @@ trait StateListener {
   def onPlayerAiChanged(piece: Piece, isAi: Boolean)
   def onBoardPieceChanged(x: Int, y: Int)
   def onGameEnd(winner: Piece)
+  def onStartThinking(aiPiece: Piece)
+  def onStopThinking()
 }

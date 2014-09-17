@@ -10,12 +10,11 @@ trait MoveCallback {
 
 class Controller(state: State) extends UiCallback with MoveCallback {
 
-    def onColumnSelected(col: Int) = if (!state.thinking) makeMove(col)
+    def onColumnSelected(col: Int) = if (state.aiThinking.isEmpty) makeMove(col)
 
     override def makeMove(col: Int) = {
         if (state.board.winner.isEmpty) {
             state.board.add(col)
-            state.setThinking(false)
             state.board.setWinner(checkWin(col))
             if (state.board.winner.isEmpty && state.playerAi(state.board.nextPiece)) {
                 new AsyncAiMove(state, new ScalaAi(state.board), this).execute(state.difficulty)
@@ -28,7 +27,10 @@ class Controller(state: State) extends UiCallback with MoveCallback {
 
 
 class AsyncAiMove(state: State, ai: Ai, callback: MoveCallback) extends SimpleAsyncTask[Int, Int] {
-    state.setThinking(true)
+    override def onPreExecute() = state.startThinking(state.board.nextPiece)
     override def doInBackground(depth: Int): Int = ai.adviseMove(depth)
-    override def onPostExecute(col: Int) = callback.makeMove(col)
+    override def onPostExecute(col: Int) = {
+        state.stopThinking()
+        callback.makeMove(col)
+    }
 }

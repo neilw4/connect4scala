@@ -21,6 +21,7 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
     var callback: UiCallback = null
 
     var vDifficultySeekBar: SeekBar = null
+    var vThinkingIndicator: ProgressBar = null
     var vDifficultyText: TextView = null
     var vPlayerAAiToggle: MenuItem = null
     var vPlayerBAiToggle: MenuItem = null
@@ -48,9 +49,9 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
             override def onStartTrackingTouch(seekBar: SeekBar) = {}
             override def onStopTrackingTouch(seekBar: SeekBar) = {}
         })
-        setSeekBarColor(vDifficultySeekBar, R.color.succulent_green)
 
         vDifficultyText = findViewById(R.id.difficulty_text).asInstanceOf[TextView]
+        vThinkingIndicator = findViewById(R.id.thinking_indicator).asInstanceOf[ProgressBar]
 
         vBoardGridContainer = findViewById(R.id.board_grid_container)
         vBoardGrid = findViewById(R.id.board_grid).asInstanceOf[GridView]
@@ -63,13 +64,17 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
                 callback.onColumnSelected(col)
             }
         })
+        setWidgetColour(R.color.pretty_white)
         state.callAllListeners
     }
 
-    def setSeekBarColor(seekBar: SeekBar, colour: Int) = {
-        val filter = new PorterDuffColorFilter(getResources.getColor(colour), PorterDuff.Mode.SRC_IN)
-        seekBar.getProgressDrawable.setColorFilter(filter)
-        seekBar.getThumb.setColorFilter(filter)
+    def makeColourFilter(colour: Int) = new PorterDuffColorFilter(getResources.getColor(colour), PorterDuff.Mode.SRC_IN)
+
+    def setWidgetColour(colour: Int) = {
+        val filter = makeColourFilter(colour)
+        vDifficultySeekBar.getProgressDrawable.setColorFilter(filter)
+        vDifficultySeekBar.getThumb.setColorFilter(filter)
+        vThinkingIndicator.getIndeterminateDrawable.setColorFilter(filter)
     }
 
     override def onDestroy() = {
@@ -95,6 +100,16 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
             case R.id.player_B_toggle => state.setPlayerAi(RED, !state.playerAi(RED))
         }
         true
+    }
+
+    override def onStartThinking(aiPiece: Piece) = {
+        vDifficultySeekBar.setVisibility(View.INVISIBLE)
+        vThinkingIndicator.setVisibility(View.VISIBLE)
+    }
+
+    override def onStopThinking() = {
+        vDifficultySeekBar.setVisibility(View.VISIBLE)
+        vThinkingIndicator.setVisibility(View.INVISIBLE)
     }
 
     override def onDifficultyChanged(difficulty: Int) = {
