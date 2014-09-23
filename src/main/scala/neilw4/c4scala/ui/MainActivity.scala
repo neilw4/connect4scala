@@ -11,14 +11,10 @@ import neilw4.c4scala.controller.Controller
 import neilw4.c4scala.state._
 import neilw4.c4scala.R
 
-trait UiCallback {
-    def onColumnSelected(column: Int)
-}
-
 class MainActivity extends Activity with StateListener with BoardSizeSetter {
 
     var state: State = null
-    lazy val callback: UiCallback = new Controller(state)
+    lazy val controller: Controller = new Controller(state)
 
     lazy val vDifficultySeekBar: SeekBar = findViewById(R.id.difficulty_seekbar).asInstanceOf[SeekBar]
     lazy val vThinkingIndicator: ProgressBar = findViewById(R.id.thinking_indicator).asInstanceOf[ProgressBar]
@@ -54,7 +50,7 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
         vBoardGrid.setOnItemClickListener(new OnItemClickListener {
             override def onItemClick(parent: AdapterView[_], View: View, position: Int, id: Long): Unit = {
                 val col: Int = parent.getAdapter.asInstanceOf[BoardAdapter].column(position)
-                callback.onColumnSelected(col)
+                controller.onColumnSelected(col)
             }
         })
         setWidgetColour(R.color.pretty_white)
@@ -88,7 +84,7 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
 
     override def onOptionsItemSelected(item: MenuItem): Boolean = {
         item.getItemId match {
-            case R.id.new_game => state.newGame
+            case R.id.new_game => controller.newGame
             case R.id.player_A_toggle => state.setPlayerAi(YELLOW, !state.playerAi(YELLOW))
             case R.id.player_B_toggle => state.setPlayerAi(RED, !state.playerAi(RED))
         }

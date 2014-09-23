@@ -1,36 +1,53 @@
 package neilw4.c4scala.controller
 
-import neilw4.c4scala.ui.UiCallback
 import neilw4.c4scala.state._
 import neilw4.c4scala.util.SimpleAsyncTask
 
-trait MoveCallback {
-    def makeMove(lastCol: Int)
-}
+class Controller(state: State) {
 
-class Controller(state: State) extends UiCallback with MoveCallback {
+    private var asyncAi: Option[AsyncAi] = None
 
     def onColumnSelected(col: Int) = if (state.aiThinking.isEmpty) makeMove(col)
 
-    override def makeMove(col: Int) = {
+    def newGame = {
+        stopAiMove
+        state.newGame
+    }
+
+    def makeMove(col: Int) = {
+        stopAiMove
         if (state.board.winner.isEmpty) {
             state.board.add(col)
-            state.board.setWinner(checkWin(col))
+            state.board.checkWinner(col)
             if (state.board.winner.isEmpty && state.playerAi(state.board.nextPiece)) {
-                new AsyncAiMove(state, new ScalaAi(state.board), this).execute(state.difficulty)
+                startAiMove
             }
         }
     }
 
-    def checkWin(lastCol: Int) = new ScalaAi(state.board).checkWin(lastCol)
+    def startAiMove = {
+        stopAiMove
+        state.startedThinking(state.board.nextPiece)
+        val task = new AsyncAi(state.board, this)
+        asyncAi = Some(task)
+        task.execute(state.difficulty)
+    }
+
+    def stopAiMove = {
+        if (asyncAi.isDefined) {
+            asyncAi.get.cancel(true)
+            asyncAi = None
+        }
+        state.stoppedThinking
+    }
+
 }
 
-
-class AsyncAiMove(state: State, ai: Ai, callback: MoveCallback) extends SimpleAsyncTask[Int, Int] {
-    override def onPreExecute() = state.startedThinking(state.board.nextPiece)
-    override def doInBackground(depth: Int): Int = ai.adviseMove(depth)
+class AsyncAi(board: Board, controller: Controller) extends SimpleAsyncTask[Int, Int] {
+    override def doInBackground(depth: Int): Int = new ScalaAi(board).adviseMove(depth)
     override def onPostExecute(col: Int) = {
-        state.stoppedThinking()
-        callback.makeMove(col)
+        controller.stopAiMove
+        controller.makeMove(col)
     }
+    override def onCancelled(col: Int) = controller.stopAiMove
 }

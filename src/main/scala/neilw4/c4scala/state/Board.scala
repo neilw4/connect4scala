@@ -2,6 +2,7 @@ package neilw4.c4scala.state
 
 import android.os.{Parcel, Parcelable}
 import neilw4.c4scala.R
+import neilw4.c4scala.controller.ScalaAi
 
 import scala.collection.mutable
 
@@ -137,6 +138,8 @@ class Board(board: Array[Array[Piece]], var nextPiece: Piece, var winner: Option
             case None => {}
         }
     }
+
+    def checkWinner(lastCol: Int) = setWinner(new ScalaAi(this).checkWin(lastCol))
 
     // Deep copy.
     override def clone = new Board(board.map(_.clone()), nextPiece, winner)
