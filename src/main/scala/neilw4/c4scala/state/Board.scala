@@ -69,6 +69,11 @@ object Board {
 
 class Board(board: Array[Array[Piece]], var nextPiece: Piece, var winner: Option[Piece]) extends Parcelable {
 
+    val heights = board.map(_.takeWhile(BLANK !=).length)
+    var aiThinking: Option[Piece] = None
+
+    private val listeners: mutable.Set[StateListener] = new mutable.HashSet[StateListener]()
+
     def this() = this(Array.fill[Piece](Board.WIDTH, Board.HEIGHT)(BLANK), YELLOW, None)
 
     override def writeToParcel(dest: Parcel, flags: Int) = {
@@ -78,10 +83,6 @@ class Board(board: Array[Array[Piece]], var nextPiece: Piece, var winner: Option
     }
 
     override def describeContents = 0
-
-    private val listeners: mutable.Set[StateListener] = new mutable.HashSet[StateListener]()
-
-    val heights = board.map(_.takeWhile(BLANK !=).length)
 
     def iterate(f: Piece => Unit) = board.foreach(_.foreach(piece => f(piece)))
 
@@ -101,6 +102,20 @@ class Board(board: Array[Array[Piece]], var nextPiece: Piece, var winner: Option
                 _.onBoardPieceChanged(x, y)
             }
         )
+        aiThinking match {
+            case None => listeners.foreach(_.onStopThinking())
+            case Some(piece) => listeners.foreach(_.onStartThinking(piece))
+        }
+    }
+
+    def startedThinking(aiPiece: Piece) = if (aiThinking != Some(aiPiece)) {
+        aiThinking = Some(aiPiece)
+        listeners.foreach(_.onStartThinking(aiPiece))
+    }
+
+    def stoppedThinking() = if (aiThinking.isDefined) {
+        aiThinking = None
+        listeners.foreach(_.onStopThinking())
     }
 
     def canAdd(col: Int) = heights(col) < board(0).length

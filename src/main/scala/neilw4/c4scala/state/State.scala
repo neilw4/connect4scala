@@ -29,8 +29,6 @@ class State(var difficulty: Int, var playerAi: mutable.Map[Piece, Boolean], var 
 
     def this(source: Parcel) = this(source.readInt, State.mapFromParcel(source), Board.CREATOR.createFromParcel(source))
 
-    var aiThinking: Option[Piece] = None
-
     override def writeToParcel(dest: Parcel, flags: Int) = {
         dest.writeInt(difficulty)
         dest.writeInt(playerAi.size)
@@ -61,10 +59,6 @@ class State(var difficulty: Int, var playerAi: mutable.Map[Piece, Boolean], var 
         listeners.foreach {
             _.onDifficultyChanged(difficulty)
         }
-        aiThinking match {
-            case None => listeners.foreach(_.onStopThinking())
-            case Some(piece) => listeners.foreach(_.onStartThinking(piece))
-        }
         playerAi.foreach {
             case (piece, isAi) => listeners.foreach(_.onPlayerAiChanged(piece, isAi))
         }
@@ -72,7 +66,6 @@ class State(var difficulty: Int, var playerAi: mutable.Map[Piece, Boolean], var 
     }
 
     def newGame = {
-        stoppedThinking()
         board = new Board
         listeners.foreach(board.attachListener)
         board.callAllListeners
@@ -86,16 +79,6 @@ class State(var difficulty: Int, var playerAi: mutable.Map[Piece, Boolean], var 
     def setPlayerAi(piece: Piece, isAi: Boolean) = if (isAi != playerAi(piece)) {
         playerAi(piece) = isAi
         listeners.foreach(_.onPlayerAiChanged(piece, isAi))
-    }
-
-    def startedThinking(aiPiece: Piece) = {
-        aiThinking = Some(aiPiece)
-      listeners.foreach(_.onStartThinking(aiPiece))
-    }
-
-    def stoppedThinking() = {
-      aiThinking = None
-      listeners.foreach(_.onStopThinking())
     }
 
     listeners.foreach(board.attachListener)
