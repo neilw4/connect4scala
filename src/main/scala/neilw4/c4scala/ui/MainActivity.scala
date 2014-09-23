@@ -85,8 +85,8 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
     override def onOptionsItemSelected(item: MenuItem): Boolean = {
         item.getItemId match {
             case R.id.new_game => controller.newGame
-            case R.id.player_A_toggle => state.setPlayerAi(YELLOW, !state.playerAi(YELLOW))
-            case R.id.player_B_toggle => state.setPlayerAi(RED, !state.playerAi(RED))
+            case R.id.player_A_toggle => controller.togglePlayerAi(YELLOW)
+            case R.id.player_B_toggle => controller.togglePlayerAi(RED)
         }
         true
     }

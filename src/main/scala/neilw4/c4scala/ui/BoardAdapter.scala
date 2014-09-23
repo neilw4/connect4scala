@@ -1,8 +1,6 @@
 package neilw4.c4scala.ui
 
 import android.content.Context
-import android.graphics.{Canvas, Paint}
-import android.util.AttributeSet
 import android.view.{View, ViewGroup}
 import android.widget.{AbsListView, BaseAdapter}
 

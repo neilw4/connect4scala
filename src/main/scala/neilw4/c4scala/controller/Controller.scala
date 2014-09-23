@@ -14,12 +14,22 @@ class Controller(state: State) {
         state.newGame
     }
 
+    def togglePlayerAi(player: Piece) {
+        state.setPlayerAi(player, !state.playerAi(player))
+        if (state.board.nextPiece == player) {
+            state.playerAi(player) match {
+                case true => startAiMove
+                case false => stopAiMove
+            }
+        }
+    }
+
     def makeMove(col: Int) = {
         stopAiMove
         if (state.board.winner.isEmpty) {
             state.board.add(col)
             state.board.checkWinner(col)
-            if (state.board.winner.isEmpty && state.playerAi(state.board.nextPiece)) {
+            if (state.playerAi(state.board.nextPiece)) {
                 startAiMove
             }
         }
@@ -27,10 +37,12 @@ class Controller(state: State) {
 
     def startAiMove = {
         stopAiMove
-        state.startedThinking(state.board.nextPiece)
-        val task = new AsyncAi(state.board, this)
-        asyncAi = Some(task)
-        task.execute(state.difficulty)
+        if (state.board.winner.isEmpty) {
+            state.startedThinking(state.board.nextPiece)
+            val task = new AsyncAi(state.board, this)
+            asyncAi = Some(task)
+            task.execute(state.difficulty)
+        }
     }
 
     def stopAiMove = {
