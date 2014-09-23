@@ -27,10 +27,10 @@ class Controller(state: State) extends UiCallback with MoveCallback {
 
 
 class AsyncAiMove(state: State, ai: Ai, callback: MoveCallback) extends SimpleAsyncTask[Int, Int] {
-    override def onPreExecute() = state.startThinking(state.board.nextPiece)
+    override def onPreExecute() = state.startedThinking(state.board.nextPiece)
     override def doInBackground(depth: Int): Int = ai.adviseMove(depth)
     override def onPostExecute(col: Int) = {
-        state.stopThinking()
+        state.stoppedThinking()
         callback.makeMove(col)
     }
 }

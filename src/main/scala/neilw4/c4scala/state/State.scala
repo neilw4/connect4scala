@@ -72,9 +72,9 @@ class State(var difficulty: Int, var playerAi: mutable.Map[Piece, Boolean], var 
     }
 
     def newGame = {
+        stoppedThinking()
         board = new Board
         listeners.foreach(board.attachListener)
-        stopThinking()
         board.callAllListeners
     }
 
@@ -88,12 +88,12 @@ class State(var difficulty: Int, var playerAi: mutable.Map[Piece, Boolean], var 
         listeners.foreach(_.onPlayerAiChanged(piece, isAi))
     }
 
-    def startThinking(aiPiece: Piece) = {
+    def startedThinking(aiPiece: Piece) = {
         aiThinking = Some(aiPiece)
       listeners.foreach(_.onStartThinking(aiPiece))
     }
 
-    def stopThinking() = {
+    def stoppedThinking() = {
       aiThinking = None
       listeners.foreach(_.onStopThinking())
     }

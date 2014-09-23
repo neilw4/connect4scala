@@ -18,15 +18,14 @@ trait UiCallback {
 class MainActivity extends Activity with StateListener with BoardSizeSetter {
 
     var state: State = null
-    var callback: UiCallback = null
+    lazy val callback: UiCallback = new Controller(state)
 
-    var vDifficultySeekBar: SeekBar = null
-    var vThinkingIndicator: ProgressBar = null
-    var vDifficultyText: TextView = null
+    lazy val vDifficultySeekBar: SeekBar = findViewById(R.id.difficulty_seekbar).asInstanceOf[SeekBar]
+    lazy val vThinkingIndicator: ProgressBar = findViewById(R.id.thinking_indicator).asInstanceOf[ProgressBar]
+    lazy val vDifficultyText: TextView = findViewById(R.id.difficulty_text).asInstanceOf[TextView]
     var vPlayerAAiToggle: MenuItem = null
     var vPlayerBAiToggle: MenuItem = null
-    var vBoardGridContainer: View = null
-    var vBoardGrid: GridView = null
+    lazy val vBoardGrid: GridView = findViewById(R.id.board_grid).asInstanceOf[GridView]
     var vBoardGridAdapter: BoardAdapter = null
 
     override def onCreate(savedInstanceState: Bundle) = {
@@ -39,22 +38,16 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
             }
         }
         state.attachListener(this)
-        callback = new Controller(state)
 
         setContentView(R.layout.activity_main)
 
-        vDifficultySeekBar = findViewById(R.id.difficulty_seekbar).asInstanceOf[SeekBar]
         vDifficultySeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener {
             override def onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) = if (fromUser) state.setDifficulty(progress + 1)
             override def onStartTrackingTouch(seekBar: SeekBar) = {}
             override def onStopTrackingTouch(seekBar: SeekBar) = {}
         })
 
-        vDifficultyText = findViewById(R.id.difficulty_text).asInstanceOf[TextView]
-        vThinkingIndicator = findViewById(R.id.thinking_indicator).asInstanceOf[ProgressBar]
-
-        vBoardGridContainer = findViewById(R.id.board_grid_container)
-        vBoardGrid = findViewById(R.id.board_grid).asInstanceOf[GridView]
+        val vBoardGridContainer = findViewById(R.id.board_grid_container)
         vBoardGridAdapter = new BoardAdapter(MainActivity.this, state, vBoardGridContainer, this)
         vBoardGrid.setNumColumns(Board.WIDTH)
         vBoardGrid.setAdapter(vBoardGridAdapter)
