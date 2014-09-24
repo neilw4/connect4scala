@@ -117,6 +117,6 @@ trait StateListener {
   def onPlayerAiChanged(piece: Piece, isAi: Boolean)
   def onBoardPieceChanged(x: Int, y: Int)
   def onGameEnd(winner: Piece)
-  def onStartThinking()
-  def onStopThinking()
+  def onStartAiThinking()
+  def onStopAiThinking()
 }

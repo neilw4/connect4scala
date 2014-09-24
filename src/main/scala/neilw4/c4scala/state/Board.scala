@@ -128,14 +128,15 @@ class Board(board: Array[Array[Piece]], var nextPiece: Piece, var winner: Option
     /** Should be called after add(col), unless the AI is calculating, because it is slow. */
     def checkWinner(lastCol: Int) = setWinner(new ScalaAi(this, null).checkWin(lastCol))
 
-    def startedThinking() = if (!aiThinking) {
+    def startAiThinking() = {
+        stopAiThinking()
         aiThinking = true
-        alertListeners(_.onStartThinking())
+        alertListeners(_.onStartAiThinking())
     }
 
-    def stoppedThinking() = if (aiThinking) {
+    def stopAiThinking() = if (aiThinking) {
         aiThinking = false
-        alertListeners(_.onStopThinking())
+        alertListeners(_.onStopAiThinking())
     }
 
     /** Deep copy. */
@@ -146,8 +147,8 @@ class Board(board: Array[Array[Piece]], var nextPiece: Piece, var winner: Option
             (x, y) => alertListeners(_.onBoardPieceChanged(x, y))
         )
         aiThinking match {
-            case false => alertListeners(_.onStopThinking())
-            case true => alertListeners(_.onStartThinking())
+            case false => alertListeners(_.onStopAiThinking())
+            case true => alertListeners(_.onStartAiThinking())
         }
     }
 }

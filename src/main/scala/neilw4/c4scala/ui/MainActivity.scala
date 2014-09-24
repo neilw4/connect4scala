@@ -98,12 +98,12 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
         true
     }
 
-    override def onStartThinking() = {
+    override def onStartAiThinking() = {
         vDifficultySeekBar.setVisibility(View.INVISIBLE)
         vThinkingIndicator.setVisibility(View.VISIBLE)
     }
 
-    override def onStopThinking() = {
+    override def onStopAiThinking() = {
         vDifficultySeekBar.setVisibility(View.VISIBLE)
         vThinkingIndicator.setVisibility(View.INVISIBLE)
     }

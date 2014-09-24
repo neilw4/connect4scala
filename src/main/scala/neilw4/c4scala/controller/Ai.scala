@@ -48,7 +48,7 @@ class ScalaAi(_board: Board, controller: Controller) extends AsyncAi(_board.clon
                     case _ => ScalaAi.LOSE_SCORE // Losing is bad.
                 }
                 // We are guaranteed to lose, so just play a random valid column.
-                val bestCol = colsFromCentre.find(board.canAdd).getOrElse(-2)
+                val bestCol = colsFromCentre.find(board.canAdd).getOrElse(-1)
                 return (bestCol, score)
             }
         }
@@ -58,7 +58,7 @@ class ScalaAi(_board: Board, controller: Controller) extends AsyncAi(_board.clon
         }
 
         var bestScore = alpha
-        var bestCol: Int = -1
+        var bestCol: Int = colsFromCentre.find(board.canAdd).getOrElse(-1)
         for (col <- colsFromCentre) {
             if(board.add(col)) {
                 val score = -negamax(depth - 1, Some(col), -beta, -bestScore)._2
