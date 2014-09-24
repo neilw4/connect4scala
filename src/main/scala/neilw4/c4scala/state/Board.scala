@@ -4,9 +4,8 @@ import android.os.{Parcel, Parcelable}
 import neilw4.c4scala.R
 import neilw4.c4scala.controller.ScalaAi
 
-import scala.collection.mutable
-
 object Piece {
+    // Randomly selected ID to represent a None: Option[Piece] in a parcel.
     val NONE_ID: Byte = 678.asInstanceOf[Byte]
 
     def read(source: Parcel) = source.readByte match {
@@ -21,9 +20,9 @@ object Piece {
         case None => dest.writeByte(NONE_ID)
         case Some(piece) => Piece.write(piece, dest)
     }
-
 }
 
+/** A piece or player. May be BLANK, RED or YELLOW. */
 trait Piece {val id: Byte; val colour: Int; val win_text: Int; val opposite: Piece}
 case object BLANK extends Piece {
     val id = 0.asInstanceOf[Byte]
@@ -45,8 +44,6 @@ case object RED extends Piece {
 }
 
 object Board {
-    val TAG = this.getClass.toString
-
     val WIDTH = 7
     val HEIGHT = 6
 
@@ -57,7 +54,6 @@ object Board {
             case null => new Board
             case _ => {
                 val emptyBoard: Array[Array[Piece]] = Array.ofDim[Piece](Board.WIDTH, Board.HEIGHT)
-
                 val board: Array[Array[Piece]] = emptyBoard.map(_.map(x => Piece.read(source).asInstanceOf[Piece]))
                 val nextPiece = Piece.read(source)
                 val winner = Option(Piece.read(source))
@@ -67,95 +63,91 @@ object Board {
     }
 }
 
-class Board(board: Array[Array[Piece]], var nextPiece: Piece, var winner: Option[Piece]) extends Parcelable {
+/** Represents a game board. */
+class Board(board: Array[Array[Piece]], var nextPiece: Piece, var winner: Option[Piece]) extends ListenerManager[StateListener] with Parcelable {
 
+    /** Store the height of each column to save lookup time. */
     val heights = board.map(_.takeWhile(BLANK !=).length)
-    var aiThinking: Option[Piece] = None
 
-    private val listeners: mutable.Set[StateListener] = new mutable.HashSet[StateListener]()
+    /** true if the AI is thinking and the board should not be modified. */
+    var aiThinking: Boolean = false
 
     def this() = this(Array.fill[Piece](Board.WIDTH, Board.HEIGHT)(BLANK), YELLOW, None)
 
     override def writeToParcel(dest: Parcel, flags: Int) = {
-        iterate((piece) => Piece.write(piece, dest))
+        foreach((piece) => Piece.write(piece, dest))
         Piece.write(nextPiece, dest)
         Piece.write(winner, dest)
     }
 
     override def describeContents = 0
 
-    def iterate(f: Piece => Unit) = board.foreach(_.foreach(piece => f(piece)))
+    /** Iterates over every cell. */
+    def foreach(f: Piece => Unit) = board.foreach(_.foreach(f))
 
     def apply(i: Int) = board.apply(i)
 
-    def attachListener(listener: StateListener) = {
-        this.listeners += listener
-    }
-
-    def removeListener(listener: StateListener) = {
-        this.listeners -= listener
-    }
-
-    def callAllListeners = {
-        Array.tabulate(Board.WIDTH, Board.HEIGHT) (
-            (x, y) => listeners.map {
-                _.onBoardPieceChanged(x, y)
-            }
-        )
-        aiThinking match {
-            case None => listeners.foreach(_.onStopThinking())
-            case Some(piece) => listeners.foreach(_.onStartThinking(piece))
-        }
-    }
-
-    def startedThinking(aiPiece: Piece) = if (aiThinking != Some(aiPiece)) {
-        aiThinking = Some(aiPiece)
-        listeners.foreach(_.onStartThinking(aiPiece))
-    }
-
-    def stoppedThinking() = if (aiThinking.isDefined) {
-        aiThinking = None
-        listeners.foreach(_.onStopThinking())
-    }
-
-    def canAdd(col: Int) = heights(col) < board(0).length
-
-    def add(col: Int) : Boolean =
-        if (canAdd(col)) {
-            val row = heights(col)
-            board(col)(row) = nextPiece
-            heights(col)+= 1
-            nextPiece = nextPiece.opposite
-            if (listeners.size > 0) {
-            }
-            listeners.map(_.onBoardPieceChanged(col, row))
-            true
-        } else false
-
     def canRemove(col: Int): Boolean = heights(col) > 0
 
+    /** Removes a piece from a column. */
     def remove(col: Int): Boolean =
         if (canRemove(col)) {
             heights(col) -= 1
             val row = heights(col)
             board(col)(row) = BLANK
             nextPiece = nextPiece.opposite
-            listeners.map(_.onBoardPieceChanged(col, row))
+            alertListeners(_.onBoardPieceChanged(col, row))
+            true
+        } else false
+
+    def canAdd(col: Int) = heights(col) < board(0).length && !aiThinking
+
+    /** Adds a piece to a column. */
+    def add(col: Int) : Boolean =
+        if (canAdd(col)) {
+            val row = heights(col)
+            board(col)(row) = nextPiece
+            heights(col)+= 1
+            nextPiece = nextPiece.opposite
+            alertListeners(_.onBoardPieceChanged(col, row))
             true
         } else false
 
     def isFull: Boolean = !heights.exists(_ < Board.HEIGHT)
 
+    /** Sets the winner, if one exists. */
     def setWinner(winner: Option[Piece]) = if(winner != this.winner) {
         this.winner = winner
         winner match {
-            case Some(piece) => listeners.map(_.onGameEnd(piece))
-            case None => {}
+            case Some(piece) => alertListeners(_.onGameEnd(piece))
+            case None =>
         }
     }
 
-    def checkWinner(lastCol: Int) = setWinner(new ScalaAi(this).checkWin(lastCol))
+    // Slightly hacky, but hey, we'll change it soon anyway.
+    /** Should be called after add(col), unless the AI is calculating, because it is slow. */
+    def checkWinner(lastCol: Int) = setWinner(new ScalaAi(this, null).checkWin(lastCol))
 
-    // Deep copy.
-    override def clone = new Board(board.map(_.clone()), nextPiece, winner)
+    def startedThinking() = if (!aiThinking) {
+        aiThinking = true
+        alertListeners(_.onStartThinking())
+    }
+
+    def stoppedThinking() = if (aiThinking) {
+        aiThinking = false
+        alertListeners(_.onStopThinking())
+    }
+
+    /** Deep copy. */
+    override def clone = new Board(board.map(_.clone), nextPiece, winner)
+
+    override def callAllListenerFunctions() = {
+        Array.tabulate(Board.WIDTH, Board.HEIGHT) (
+            (x, y) => alertListeners(_.onBoardPieceChanged(x, y))
+        )
+        aiThinking match {
+            case false => alertListeners(_.onStopThinking())
+            case true => alertListeners(_.onStartThinking())
+        }
+    }
 }

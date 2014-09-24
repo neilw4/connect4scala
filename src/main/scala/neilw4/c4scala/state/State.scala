@@ -3,6 +3,19 @@ package neilw4.c4scala.state
 import android.os.{Parcel, Parcelable}
 import scala.collection.mutable
 
+/** Allows a set of listeners to be alerted. */
+trait ListenerManager[L] {
+    private val listeners: mutable.Set[L] = mutable.HashSet()
+
+    def attachListeners(listeners: Iterable[L]): Unit = this.listeners ++= listeners
+    def attachListener(listener: L): Unit = listeners += listener
+    def removeListener(listener: L): Unit = listeners -= listener
+    def clearListeners(): Unit = listeners.clear()
+    protected def alertListeners(fn: (L) => Unit): Unit = listeners.foreach(fn)
+
+    def callAllListenerFunctions()
+}
+
 object State {
     val KEY = "com.neilw4.c4scala.State"
     val CREATOR: Parcelable.Creator[State] = new Parcelable.Creator[State] {
@@ -23,9 +36,15 @@ object State {
     }
 }
 
-class State(var difficulty: Int, var playerAi: mutable.Map[Piece, Boolean], var board: Board) extends Parcelable {
+/**
+ * All mutable state should be stored here.
+ * @param difficulty how hard the AI should be.
+ * @param playerAi stores whether a player is human or AI.
+ * @param board the state of the game board.
+ */
+class State(var difficulty: Int, var playerAi: mutable.Map[Piece, Boolean], var board: Board) extends ListenerManager[StateListener] with Parcelable {
 
-    def this() = this(5, mutable.Map(RED -> true, YELLOW -> false), new Board)
+    def this() = this(4, mutable.Map(RED -> true, YELLOW -> false), new Board)
 
     def this(source: Parcel) = this(source.readInt, State.mapFromParcel(source), Board.CREATOR.createFromParcel(source))
 
@@ -43,45 +62,54 @@ class State(var difficulty: Int, var playerAi: mutable.Map[Piece, Boolean], var 
 
     override def describeContents = 0
 
-    private val listeners: mutable.Set[StateListener] = mutable.HashSet()
-
-    def attachListener(listener: StateListener) = {
-        listeners += listener
-        board.attachListener(listener)
-    }
-
-    def removeListener(listener: StateListener) = {
-        listeners -= listener
-        board.removeListener(listener)
-    }
-
-    def callAllListeners = {
-        listeners.foreach {
-            _.onDifficultyChanged(difficulty)
-        }
-        playerAi.foreach {
-            case (piece, isAi) => listeners.foreach(_.onPlayerAiChanged(piece, isAi))
-        }
-        board.callAllListeners
-    }
-
-    def newGame = {
+    /** Replaces the board with a new one. */
+    def newGame() = {
+        board.clearListeners()
         board = new Board
-        listeners.foreach(board.attachListener)
-        board.callAllListeners
+        alertListeners(board.attachListener(_))
+        board.callAllListenerFunctions
     }
 
-    def setDifficulty(tDifficulty: Int) = if (tDifficulty != difficulty) {
-        difficulty = tDifficulty
-        listeners.foreach(_.onDifficultyChanged(difficulty))
+    def setDifficulty(difficulty: Int) = if (this.difficulty != difficulty) {
+        this.difficulty = difficulty
+        alertListeners(_.onDifficultyChanged(difficulty))
     }
 
     def setPlayerAi(piece: Piece, isAi: Boolean) = if (isAi != playerAi(piece)) {
         playerAi(piece) = isAi
-        listeners.foreach(_.onPlayerAiChanged(piece, isAi))
+        alertListeners(_.onPlayerAiChanged(piece, isAi))
     }
 
-    listeners.foreach(board.attachListener)
+    def togglePlayerAi(player: Piece) = setPlayerAi(player, !playerAi(player))
+
+    override def attachListeners(listeners: Iterable[StateListener]) = {
+        super.attachListeners(listeners)
+        board.attachListeners(listeners)
+    }
+
+    override def attachListener(listener: StateListener) = {
+        super.attachListener(listener)
+        board.attachListener(listener)
+    }
+
+    override def removeListener(listener: StateListener) = {
+        super.removeListener(listener)
+        board.removeListener(listener)
+    }
+
+    override def clearListeners() = {
+        super.clearListeners()
+        board.clearListeners()
+    }
+
+    override def callAllListenerFunctions() = {
+        alertListeners(_.onDifficultyChanged(difficulty))
+
+        playerAi.foreach {
+            case (piece, isAi) => alertListeners(_.onPlayerAiChanged(piece, isAi))
+        }
+        board.callAllListenerFunctions()
+    }
 }
 
 trait StateListener {
@@ -89,6 +117,6 @@ trait StateListener {
   def onPlayerAiChanged(piece: Piece, isAi: Boolean)
   def onBoardPieceChanged(x: Int, y: Int)
   def onGameEnd(winner: Piece)
-  def onStartThinking(aiPiece: Piece)
+  def onStartThinking()
   def onStopThinking()
 }

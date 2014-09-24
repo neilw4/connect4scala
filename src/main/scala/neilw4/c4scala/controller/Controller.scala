@@ -1,63 +1,61 @@
 package neilw4.c4scala.controller
 
 import neilw4.c4scala.state._
-import neilw4.c4scala.util.SimpleAsyncTask
 
-class Controller(state: State) {
+/** Controls the internal logic of the application. */
+class Controller(state: State) extends StateListener {
+    state.attachListener(this)
+    val loggingListener = new LoggingListener
+    state.attachListener(loggingListener)
 
-    private var asyncAi: Option[AsyncAi] = None
-
-    def onColumnSelected(col: Int) = if (state.board.aiThinking.isEmpty) makeMove(col)
-
-    def newGame = {
-        stopAiMove()
-        state.newGame
-        startMove
-    }
-
-    def togglePlayerAi(player: Piece) {
-        state.setPlayerAi(player, !state.playerAi(player))
-        if (state.board.nextPiece == player) {
-            startMove
-        }
-    }
+    // The AI task being run if it exists.
+    var asyncAi: Option[AsyncAi] = None
 
     def makeMove(col: Int) = {
         stopAiMove()
         if (state.board.winner.isEmpty) {
             state.board.add(col)
             state.board.checkWinner(col)
-            startMove
         }
     }
 
-    def startMove = {
+    /** Starts the AI if relevant. */
+    def startAiMove() = {
         stopAiMove()
         if (state.board.winner.isEmpty && state.playerAi(state.board.nextPiece)) {
-            state.board.startedThinking(state.board.nextPiece)
-            val task = new AsyncAi(state.board, this)
+            state.board.startedThinking()
+            val task = new ScalaAi(state.board, this)
             asyncAi = Some(task)
             task.execute(state.difficulty)
         }
     }
 
-    def stopAiMove(aiSuccess: Boolean=true) = {
-        if (asyncAi.isDefined) {
-            asyncAi.get.cancel(true)
-            asyncAi = None
-        }
-        if (aiSuccess) {
-            state.board.stoppedThinking
-        }
+    /** Stops the AI if it is running. */
+    def stopAiMove() = {
+        asyncAi.foreach(_.cancel(true))
+        asyncAi = None
+        state.board.stoppedThinking()
     }
 
-}
-
-class AsyncAi(board: Board, controller: Controller) extends SimpleAsyncTask[Int, Int] {
-    override def doInBackground(depth: Int): Int = new ScalaAi(board).adviseMove(depth)
-    override def onPostExecute(col: Int) = {
-        controller.stopAiMove()
-        controller.makeMove(col)
+    def onDestroy() = {
+        state.removeListener(this)
+        state.removeListener(loggingListener)
     }
-    override def onCancelled(col: Int) = controller.stopAiMove(false)
+
+    /** If the difficulty changes while the AI is playing, restart the AI. */
+    override def onDifficultyChanged(difficulty: Int) = if (state.board.aiThinking) startAiMove
+
+    /** If the current player has changed between human and AI, stop/start the AI. */
+    override def onPlayerAiChanged(piece: Piece, isAi: Boolean) = (piece == state.board.nextPiece, isAi) match {
+        case (true, true) => startAiMove()
+        case (true, false) => stopAiMove()
+        case _ =>
+    }
+
+    /** When a move is made, check if the AI should play. */
+    override def onBoardPieceChanged(x: Int, y: Int) = startAiMove()
+
+    override def onStartThinking() = {}
+    override def onStopThinking() = {}
+    override def onGameEnd(winner: Piece) = stopAiMove()
 }

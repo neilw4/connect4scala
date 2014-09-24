@@ -12,17 +12,16 @@ trait BoardSizeSetter {
     def setBoardSize(width: Int, height: Int)
 }
 
+/** Adapts the Board class to be displayed in a GridView. */
 class BoardAdapter(context: Context, state: State, parent: View, boardSizeSetter: BoardSizeSetter) extends BaseAdapter {
-
     setSize()
 
-    parent.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+    parent.addOnLayoutChangeListener(new View.OnLayoutChangeListener {
         override def onLayoutChange(v: View, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) = {
             if (left - right != oldLeft - oldRight || top - bottom != oldTop - oldBottom) {
                 setSize()
             }
         }
-
     })
 
     var size = 0
@@ -56,6 +55,7 @@ class BoardAdapter(context: Context, state: State, parent: View, boardSizeSetter
         view
     }
 
+    // Convert 1d positions to 2d positions.
     def column(position: Int) = position % Board.WIDTH
     def row(position: Int) = Board.HEIGHT - position / Board.WIDTH - 1
 }
