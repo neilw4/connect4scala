@@ -44,7 +44,7 @@ android {
         }
 
         prod {
-            minSdkVersion 15
+            minSdkVersion 16
         }
     }
 }
