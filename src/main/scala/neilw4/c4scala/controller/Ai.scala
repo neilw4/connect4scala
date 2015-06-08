@@ -44,7 +44,7 @@ class ScalaAi(_board: Board, controller: Controller) extends AsyncAi(_board.clon
             val winner = checkWin(lastCol.get)
             if (winner.isDefined) {
                 val score = winner.get match {
-                    case BLANK => ScalaAi.DRAW_SCORE // Draw is equally bad for both players.
+                    case DRAW => ScalaAi.DRAW_SCORE // Draw is equally bad for both players.
                     case _ => ScalaAi.LOSE_SCORE // Losing is bad.
                 }
                 // We are guaranteed to lose, so just play a random valid column.
@@ -54,7 +54,7 @@ class ScalaAi(_board: Board, controller: Controller) extends AsyncAi(_board.clon
         }
 
         if (depth == 0) {
-            return (-1, eval(board.nextPiece))
+            return (-1, eval(board.nextPlayer))
         }
 
         var bestScore = alpha
@@ -142,23 +142,24 @@ class ScalaAi(_board: Board, controller: Controller) extends AsyncAi(_board.clon
      * @param lastCol the last column used.
      * @return None if the game has ended, BLANK for a draw, or the winning piece.
      */
-    def checkWin(lastCol: Int): Option[Piece] = {
+    def checkWin(lastCol: Int): Option[Winner] = {
         if (board.isFull) {
-            return Some(BLANK)
+            return Some(DRAW)
         }
         val row = board.heights(lastCol) - 1
         val piece = board(lastCol)(row)
-
-        for (sequence <- sequencesContaining(lastCol, row)) {
-            if (sequence.forall(_._3 == piece)) {
-                return Some(piece)
+        if (piece.isInstanceOf[Winner]) {
+            for (sequence <- sequencesContaining(lastCol, row)) {
+                if (sequence.forall(_._3 == piece)) {
+                    return Some(piece.asInstanceOf[Winner])
+                }
             }
         }
         None
     }
 
     /** @return the value of the board from the viewpoint of a piece. */
-    def eval(viewPoint: Piece): Int = {
+    def eval(viewPoint: Player): Int = {
         var totalScore: Int = 0
 
         for (sequence <- allSequences) {
@@ -166,7 +167,7 @@ class ScalaAi(_board: Board, controller: Controller) extends AsyncAi(_board.clon
             var player: Piece = BLANK
             breakable {
                 for ((col, row, piece) <- sequence) {
-                    if (piece == player.opposite) {
+                    if ((piece == BLANK && player == BLANK) || (player != BLANK  && piece == player.asInstanceOf[Player].opposite)) {
                         score = 0
                         break
                     }

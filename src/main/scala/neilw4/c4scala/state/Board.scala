@@ -4,43 +4,68 @@ import android.os.{Parcel, Parcelable}
 import neilw4.c4scala.R
 import neilw4.c4scala.controller.ScalaAi
 
-object Piece {
+object ParcelableEnum {
     // Randomly selected ID to represent a None: Option[Piece] in a parcel.
-    val NONE_ID: Byte = 678.asInstanceOf[Byte]
+    val NONE_ID: Byte = 57.asInstanceOf[Byte]
 
-    def read(source: Parcel) = source.readByte match {
+    def read(source: Parcel) = source.readByte() match {
         case BLANK.id => BLANK
         case YELLOW.id => YELLOW
         case RED.id => RED
-        case NONE_ID => null
+        case DRAW.id => DRAW
+        case NONE_ID  => null
     }
 
-    def write(piece: Piece, dest: Parcel): Unit = dest.writeByte(piece.id)
-    def write(winner: Option[Piece], dest: Parcel): Unit = winner match {
+    def write(piece: Option[ParcelableEnum], dest: Parcel): Unit = piece match {
+        case Some(piece) => dest.writeByte(piece.id)
         case None => dest.writeByte(NONE_ID)
-        case Some(piece) => Piece.write(piece, dest)
     }
+
+    def write(piece: ParcelableEnum, dest: Parcel): Unit = write(Option(piece), dest)
 }
 
-/** A piece or player. May be BLANK, RED or YELLOW. */
-trait Piece {val id: Byte; val colour: Int; val win_text: Int; val opposite: Piece}
-case object BLANK extends Piece {
-    val id = 0.asInstanceOf[Byte]
-    val colour = R.color.pretty_white
-    val win_text = R.string.draw
-    val opposite = BLANK
+object Piece {
+    def read(source: Parcel) = ParcelableEnum.read(source).asInstanceOf[Piece]
+    def write(piece: Piece, dest: Parcel) = ParcelableEnum.write(piece, dest)
 }
-case object YELLOW extends Piece {
-    val id = 1.asInstanceOf[Byte]
+
+object Player {
+    def read(source: Parcel) = ParcelableEnum.read(source).asInstanceOf[Player]
+    def write(player: Player, dest: Parcel) = ParcelableEnum.write(player, dest)
+}
+
+object Winner {
+    def read(source: Parcel) = Option(ParcelableEnum.read(source).asInstanceOf[Winner])
+    def write(winner: Option[Winner], dest: Parcel) = ParcelableEnum.write(winner, dest)
+}
+
+trait ParcelableEnum {val id: Byte}
+/** Drawable piece may be BLANK, RED or YELLOW. */
+trait Piece extends ParcelableEnum {val colour: Int}
+/** Winner of the game may be DRAW, RED or YELLOW. */
+trait Winner extends ParcelableEnum {val win_text: Int}
+/** A player. May be RED or YELLOW. */
+trait Player extends Piece with Winner {val opposite: Player}
+
+case object BLANK extends Piece {
+    val id: Byte = 0
+    val colour = R.color.pretty_white
+}
+case object YELLOW extends Player {
+    val id: Byte = 1
     val colour = R.color.mild_yellow
     val win_text = R.string.yellow_win
     val opposite = RED
 }
-case object RED extends Piece {
-    val id = 2.asInstanceOf[Byte]
+case object RED extends Player {
+    val id: Byte = 2
     val colour = R.color.chilled_red
     val win_text = R.string.red_win
     val opposite = YELLOW
+}
+case object DRAW extends Winner {
+    val id: Byte = 3
+    val win_text = R.string.draw
 }
 
 object Board {
@@ -52,19 +77,18 @@ object Board {
 
         override def createFromParcel(source: Parcel) = source match {
             case null => new Board
-            case _ => {
+            case _ =>
                 val emptyBoard: Array[Array[Piece]] = Array.ofDim[Piece](Board.WIDTH, Board.HEIGHT)
-                val board: Array[Array[Piece]] = emptyBoard.map(_.map(x => Piece.read(source).asInstanceOf[Piece]))
-                val nextPiece = Piece.read(source)
-                val winner = Option(Piece.read(source))
-                new Board(board, nextPiece, winner)
-            }
+                val board: Array[Array[Piece]] = emptyBoard.map(_.map(x => Piece.read(source)))
+                val nextPlayer = Player.read(source)
+                val winner = Winner.read(source)
+                new Board(board, nextPlayer, winner)
         }
     }
 }
 
 /** Represents a game board. */
-class Board(board: Array[Array[Piece]], var nextPiece: Piece, var winner: Option[Piece]) extends ListenerManager[StateListener] with Parcelable {
+class Board(board: Array[Array[Piece]], var nextPlayer: Player, var winner: Option[Winner]) extends ListenerManager[StateListener] with Parcelable {
 
     /** Store the height of each column to save lookup time. */
     val heights = board.map(_.takeWhile(BLANK !=).length)
@@ -76,8 +100,8 @@ class Board(board: Array[Array[Piece]], var nextPiece: Piece, var winner: Option
 
     override def writeToParcel(dest: Parcel, flags: Int) = {
         foreach((piece) => Piece.write(piece, dest))
-        Piece.write(nextPiece, dest)
-        Piece.write(winner, dest)
+        Player.write(nextPlayer, dest)
+        Winner.write(winner, dest)
     }
 
     override def describeContents = 0
@@ -85,7 +109,7 @@ class Board(board: Array[Array[Piece]], var nextPiece: Piece, var winner: Option
     /** Iterates over every cell. */
     def foreach(f: Piece => Unit) = board.foreach(_.foreach(f))
 
-    def apply(i: Int) = board.apply(i)
+    def  apply(col: Int) = board(col)
 
     def canRemove(col: Int): Boolean = heights(col) > 0
 
@@ -95,7 +119,7 @@ class Board(board: Array[Array[Piece]], var nextPiece: Piece, var winner: Option
             heights(col) -= 1
             val row = heights(col)
             board(col)(row) = BLANK
-            nextPiece = nextPiece.opposite
+            nextPlayer = nextPlayer.opposite
             alertListeners(_.onBoardPieceChanged(col, row))
             true
         } else false
@@ -106,9 +130,9 @@ class Board(board: Array[Array[Piece]], var nextPiece: Piece, var winner: Option
     def add(col: Int) : Boolean =
         if (canAdd(col)) {
             val row = heights(col)
-            board(col)(row) = nextPiece
+            board(col)(row) = nextPlayer
             heights(col)+= 1
-            nextPiece = nextPiece.opposite
+            nextPlayer = nextPlayer.opposite
             alertListeners(_.onBoardPieceChanged(col, row))
             true
         } else false
@@ -116,7 +140,7 @@ class Board(board: Array[Array[Piece]], var nextPiece: Piece, var winner: Option
     def isFull: Boolean = !heights.exists(_ < Board.HEIGHT)
 
     /** Sets the winner, if one exists. */
-    def setWinner(winner: Option[Piece]) = if(winner != this.winner) {
+    def setWinner(winner: Option[Winner]) = if(winner != this.winner) {
         this.winner = winner
         winner match {
             case Some(piece) => alertListeners(_.onGameEnd(piece))
@@ -140,7 +164,7 @@ class Board(board: Array[Array[Piece]], var nextPiece: Piece, var winner: Option
     }
 
     /** Deep copy. */
-    override def clone = new Board(board.map(_.clone), nextPiece, winner)
+    override def clone = new Board(board.map(_.clone), nextPlayer, winner)
 
     override def callAllListenerFunctions() = {
         Array.tabulate(Board.WIDTH, Board.HEIGHT) (

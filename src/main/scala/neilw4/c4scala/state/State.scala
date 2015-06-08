@@ -25,12 +25,12 @@ object State {
 
     //TODO: make functional
     def mapFromParcel(source: Parcel) = {
-        val m = new mutable.HashMap[Piece, Boolean]
-        val size = source.readByte
-        for (i <- 0 to size) {
+        val m = new mutable.HashMap[Player, Boolean]
+        val size = source.readByte()
+        for (i <- 1 to size) {
             val piece = Piece.read(source)
-            val isAi = source.readByte == 1
-            m += (piece, isAi).asInstanceOf[(Piece, Boolean)]
+            val isAi = source.readByte() == 1
+            m += (piece, isAi).asInstanceOf[(Player, Boolean)]
         }
         m
     }
@@ -42,20 +42,19 @@ object State {
  * @param playerAi stores whether a player is human or AI.
  * @param board the state of the game board.
  */
-class State(var difficulty: Int, var playerAi: mutable.Map[Piece, Boolean], var board: Board) extends ListenerManager[StateListener] with Parcelable {
+class State(var difficulty: Int, var playerAi: mutable.Map[Player, Boolean], var board: Board) extends ListenerManager[StateListener] with Parcelable {
 
     def this() = this(4, mutable.Map(RED -> true, YELLOW -> false), new Board)
 
-    def this(source: Parcel) = this(source.readInt, State.mapFromParcel(source), Board.CREATOR.createFromParcel(source))
+    def this(source: Parcel) = this(source.readInt(), State.mapFromParcel(source), Board.CREATOR.createFromParcel(source))
 
     override def writeToParcel(dest: Parcel, flags: Int) = {
         dest.writeInt(difficulty)
         dest.writeInt(playerAi.size)
         playerAi.foreach {
-            case (piece, isAi) => {
-                Piece.write(piece, dest)
+            case (piece, isAi) =>
+                Player.write(piece, dest)
                 dest.writeByte(if (isAi) 1 else 0)
-            }
         }
         board.writeToParcel(dest, flags)
     }
@@ -66,8 +65,8 @@ class State(var difficulty: Int, var playerAi: mutable.Map[Piece, Boolean], var 
     def newGame() = {
         board.clearListeners()
         board = new Board
-        alertListeners(board.attachListener(_))
-        board.callAllListenerFunctions
+        alertListeners(board.attachListener)
+        board.callAllListenerFunctions()
     }
 
     def setDifficulty(difficulty: Int) = if (this.difficulty != difficulty) {
@@ -75,12 +74,14 @@ class State(var difficulty: Int, var playerAi: mutable.Map[Piece, Boolean], var 
         alertListeners(_.onDifficultyChanged(difficulty))
     }
 
-    def setPlayerAi(piece: Piece, isAi: Boolean) = if (isAi != playerAi(piece)) {
-        playerAi(piece) = isAi
-        alertListeners(_.onPlayerAiChanged(piece, isAi))
+    def setPlayerAi(player: Player, isAi: Boolean) = if (isAi != playerAi(player)) {
+        playerAi(player) = isAi
+        alertListeners(_.onPlayerAiChanged(player, isAi))
     }
 
-    def togglePlayerAi(player: Piece) = setPlayerAi(player, !playerAi(player))
+    def togglePlayerAi(player: Player) = {
+        setPlayerAi(player, !playerAi(player))
+    }
 
     override def attachListeners(listeners: Iterable[StateListener]) = {
         super.attachListeners(listeners)
@@ -114,9 +115,9 @@ class State(var difficulty: Int, var playerAi: mutable.Map[Piece, Boolean], var 
 
 trait StateListener {
   def onDifficultyChanged(difficulty: Int)
-  def onPlayerAiChanged(piece: Piece, isAi: Boolean)
+  def onPlayerAiChanged(player: Player, isAi: Boolean)
   def onBoardPieceChanged(x: Int, y: Int)
-  def onGameEnd(winner: Piece)
+  def onGameEnd(winner: Winner)
   def onStartAiThinking()
   def onStopAiThinking()
 }

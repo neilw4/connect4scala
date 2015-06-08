@@ -28,18 +28,18 @@ class Controller(state: State) extends StateListener {
     override def onDifficultyChanged(difficulty: Int) = if (state.board.aiThinking) state.board.startAiThinking()
 
     /** If the current player has changed between human and AI, stop/start the AI. */
-    override def onPlayerAiChanged(piece: Piece, isAi: Boolean) = (piece == state.board.nextPiece, isAi) match {
+    override def onPlayerAiChanged(player: Player, isAi: Boolean) = (player == state.board.nextPlayer, isAi) match {
         case (true, true) => state.board.startAiThinking()
         case (true, false) => state.board.stopAiThinking()
         case _ =>
     }
 
     /** When a move is made, check if the AI should play. */
-    override def onBoardPieceChanged(x: Int, y: Int) = if (state.playerAi(state.board.nextPiece)) state.board.startAiThinking()
+    override def onBoardPieceChanged(x: Int, y: Int) = if (state.playerAi(state.board.nextPlayer)) state.board.startAiThinking()
 
     /** Starts an AsyncTask for the AI to run. */
     override def onStartAiThinking() = {
-        if (state.board.winner.isEmpty && state.playerAi(state.board.nextPiece)) {
+        if (state.board.winner.isEmpty && state.playerAi(state.board.nextPlayer)) {
             val task = new ScalaAi(state.board, this)
             asyncAi = Some(task)
             task.execute(state.difficulty)
@@ -51,5 +51,5 @@ class Controller(state: State) extends StateListener {
         asyncAi.foreach(_.cancel(true))
         asyncAi = None
     }
-    override def onGameEnd(winner: Piece) = state.board.stopAiThinking()
+    override def onGameEnd(winner: Winner) = state.board.stopAiThinking()
 }

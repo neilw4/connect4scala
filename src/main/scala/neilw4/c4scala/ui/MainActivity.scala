@@ -115,7 +115,7 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
 
     def setDifficultyText(difficulty: Int) = vDifficultyText.setText("Difficulty: " + difficulty)
 
-    override def onPlayerAiChanged(piece: Piece, isAi: Boolean) = piece match {
+    override def onPlayerAiChanged(player: Player, isAi: Boolean) = player match {
         case YELLOW => if (vPlayerAAiToggle != null) vPlayerAAiToggle.setIcon(isAi match {
             case true => R.drawable.yellow_ai
             case false => R.drawable.yellow_user
@@ -139,7 +139,7 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
 
     override def onBoardPieceChanged(x: Int, y: Int) = vBoardGridAdapter.notifyDataSetChanged()
 
-    override def onGameEnd(winner: Piece) = {
+    override def onGameEnd(winner: Winner) = {
         val message = getResources.getString(winner.win_text)
         Toast.makeText(getBaseContext, message, Toast.LENGTH_LONG).show()
     }
