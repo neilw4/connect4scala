@@ -10,3 +10,4 @@ c4-release-key.keystore
 target
 project/project
 project/target
+local.properties

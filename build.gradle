@@ -4,49 +4,54 @@
 buildscript {
     repositories {
         mavenCentral()
-        maven {
-            url "http://saturday06.github.io/gradle-android-scala-plugin/repository/snapshot"
-        }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:0.12.+'
-        classpath 'jp.leafytree.gradle:gradle-android-scala-plugin:1.0-SNAPSHOT'
+        classpath 'com.android.tools.build:gradle:1.2.3'
+        classpath 'jp.leafytree.gradle:gradle-android-scala-plugin:1.4'
     }
 }
 
 repositories {
     mavenCentral()
+    jcenter()
 }
 
-apply plugin: 'android'
-apply plugin: 'android-scala'
+apply plugin: "com.android.application"
+apply plugin: "jp.leafytree.android-scala"
 
 android {
-    compileSdkVersion 20
-    buildToolsVersion "20"
+    compileSdkVersion "android-22"
+    buildToolsVersion "22.0.1"
 
     lintOptions {
         abortOnError false
     }
 
     defaultConfig {
-        minSdkVersion 15
-        targetSdkVersion 20
+        targetSdkVersion 22
+        testInstrumentationRunner "com.android.test.runner.MultiDexTestRunner"
+        multiDexEnabled true
     }
 
-    buildTypes {
-        debug {
-            runProguard true
-            proguardFile 'proguard-rules.txt'
+    dexOptions {
+        preDexLibraries false
+        javaMaxHeapSize "2g"
+    }
+
+    productFlavors {
+        dev {
+            minSdkVersion 21 // To reduce compilation time
         }
-        release {
-            runProguard true
-            proguardFile 'proguard-rules.txt'
+
+        prod {
+            minSdkVersion 15
         }
     }
 }
 
 dependencies {
     compile 'org.scala-lang:scala-library:2.11.0'
+    compile "com.android.support:multidex:1.0.1"
+    androidTestCompile "com.android.support:multidex-instrumentation:1.0.1", { exclude module: "multidex" }
     compile fileTree(dir: 'libs', include: ['*.jar'])
 }
