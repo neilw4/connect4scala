@@ -1,5 +1,6 @@
 #include <limits.h>
 #include <stdbool.h>
+#include <jni.h>
 
 #define HEIGHT 6
 #define WIDTH 7
@@ -30,3 +31,5 @@ void removePiece(Board* board, int col);
 // Checks for a win. Returns INT_MAX for a win,
 // INT_MIN + 1 if it is a draw and 0 if the game hasn't ended.
 int checkWin(Board* board, int col, Piece lastPlayer);
+
+JNIEXPORT jint JNICALL Java_neilw4_c4scala_controller_NativeAi_00024_nativeAdviseMove(JNIEnv* env, jobject this, jbyteArray jBoard, jintArray jHeights, jint jPieceCount, jint difficulty);

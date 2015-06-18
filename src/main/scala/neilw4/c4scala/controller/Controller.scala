@@ -40,7 +40,7 @@ class Controller(state: State) extends StateListener {
     /** Starts an AsyncTask for the AI to run. */
     override def onStartAiThinking() = {
         if (state.board.winner.isEmpty && state.playerAi(state.board.nextPlayer)) {
-            val task = new ScalaAi(state.board, this)
+            val task = new NativeAi(state.board, this)
             asyncAi = Some(task)
             task.execute(state.difficulty)
         }

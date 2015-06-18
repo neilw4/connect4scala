@@ -88,7 +88,7 @@ object Board {
 }
 
 /** Represents a game board. */
-class Board(board: Array[Array[Piece]], var nextPlayer: Player, var winner: Option[Winner]) extends ListenerManager[StateListener] with Parcelable {
+class Board(board: Array[Array[Piece]], var nextPlayer: Player, var winner: Option[Winner]) extends ListenerManager[StateListener] with Parcelable with Traversable[Piece] {
 
     /** Store the height of each column to save lookup time. */
     val heights = board.map(_.takeWhile(BLANK !=).length)
@@ -107,9 +107,9 @@ class Board(board: Array[Array[Piece]], var nextPlayer: Player, var winner: Opti
     override def describeContents = 0
 
     /** Iterates over every cell. */
-    def foreach(f: Piece => Unit) = board.foreach(_.foreach(f))
+    def foreach[U](f: Piece => U):  Unit = board.flatten.foreach(f)
 
-    def  apply(col: Int) = board(col)
+    def apply(col: Int) = board(col)
 
     def canRemove(col: Int): Boolean = heights(col) > 0
 
@@ -124,7 +124,7 @@ class Board(board: Array[Array[Piece]], var nextPlayer: Player, var winner: Opti
             true
         } else false
 
-    def canAdd(col: Int) = heights(col) < board(0).length && !aiThinking
+    def canAdd(col: Int) = col >=0 && col <= Board.WIDTH && heights(col) < Board.HEIGHT
 
     /** Adds a piece to a column. */
     def add(col: Int) : Boolean =

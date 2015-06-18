@@ -51,7 +51,7 @@ class MainActivity extends Activity with StateListener with BoardSizeSetter {
         vBoardGrid.setNumColumns(Board.WIDTH)
         vBoardGrid.setAdapter(vBoardGridAdapter)
         vBoardGrid.setOnItemClickListener(new OnItemClickListener {
-            override def onItemClick(parent: AdapterView[_], View: View, position: Int, id: Long): Unit = {
+            override def onItemClick(parent: AdapterView[_], View: View, position: Int, id: Long): Unit = if (!state.board.aiThinking) {
                 val col: Int = parent.getAdapter.asInstanceOf[BoardAdapter].column(position)
                 state.board.add(col)
                 state.board.checkWinner(col)

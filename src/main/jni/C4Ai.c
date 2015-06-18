@@ -55,7 +55,7 @@ int checkWin(Board* board, int col, Piece lastPlayer) {
         row++;
         fprintf(stderr, "row == -1???\n");
     }
-    // Checks the 4 possible around (col, row). Must be greater than 3 because it does not count (col, row).
+    // Checks the 4 possible around (col, row). Must be >= than 3 because it does not count (col, row).
     if (getCount(board, row + 1, col + 1, 1, 1, lastPlayer) + getCount(board, row - 1, col - 1, -1, -1, lastPlayer) >= 3 // Diagonal 1.
         || getCount(board, row + 1, col - 1, 1, -1, lastPlayer) + getCount(board, row - 1, col + 1, -1, 1, lastPlayer) >= 3 // Diagonal 2.
         || getCount(board, row + 1, col, 1, 0, lastPlayer) + getCount(board, row - 1, col, -1, 0, lastPlayer) >= 3 // Vertical.
@@ -198,7 +198,7 @@ int negamax(Board* board, int depth, Piece player, int alpha, int beta, int last
                         break;
                     }
                 } else {
-//                    fprintf(stderr, "val <= alpha???\n");
+                    fprintf(stderr, "val <= alpha???\n");
                 }
             }
             removePiece(board, col);
@@ -238,4 +238,14 @@ int getBestMove(Board* board, int depth) {
         }
     }
     return bestCol;
+}
+
+
+JNIEXPORT jint JNICALL Java_neilw4_c4scala_controller_NativeAi_00024_nativeAdviseMove(JNIEnv* env, jobject this, jbyteArray jBoard, jintArray jHeights, jint jPieceCount, jint difficulty) {
+    Board board;
+    memcpy(&(board.board), (*env)->GetByteArrayElements(env,  jBoard, 0), sizeof(board.board));
+    memcpy(&(board.pieceHeight), (*env)->GetIntArrayElements(env,  jHeights, 0), sizeof(board.pieceHeight));
+    board.pieceCount = jPieceCount;
+
+    return (jint)getBestMove(&board, difficulty);
 }

@@ -10,7 +10,13 @@ import scala.util.control.Breaks._
  */
 abstract class AsyncAi(var board: Board, controller: Controller) extends SimpleAsyncTask[Int, Int] {
     override def doInBackground(depth: Int): Int = adviseMove(depth)
-    override def onPostExecute(col: Int) = controller.makeMove(col)
+    override def onPostExecute(col: Int) = {
+        if(board.canAdd(col)) {
+            controller.makeMove(col)
+        } else {
+            android.util.Log.w(getClass.getSimpleName, "AI attempted impossible move  in  column " + col)
+        }
+    }
 
     /**
      * Core of the AI's functionality should be in here.
@@ -140,7 +146,7 @@ class ScalaAi(_board: Board, controller: Controller) extends AsyncAi(_board.clon
     /**
      * Checks to see if the game has ended.
      * @param lastCol the last column used.
-     * @return None if the game has ended, BLANK for a draw, or the winning piece.
+     * @return None if the game has ended, DRAW for a draw, or the winning piece.
      */
     def checkWin(lastCol: Int): Option[Winner] = {
         if (board.isFull) {
@@ -169,7 +175,7 @@ class ScalaAi(_board: Board, controller: Controller) extends AsyncAi(_board.clon
                 for ((col, row, piece) <- sequence) {
                     if ((piece == BLANK && player == BLANK) || (player != BLANK  && piece == player.asInstanceOf[Player].opposite)) {
                         score = 0
-                        break
+                        break()
                     }
                     player = piece
                     breakable {
@@ -177,7 +183,7 @@ class ScalaAi(_board: Board, controller: Controller) extends AsyncAi(_board.clon
                             if (board(col)(rowTemp) == BLANK && row - rowTemp > ScalaAi.MAX_MOVES_AWAY) {
                                 score /= Board.WIDTH
                             } else {
-                                break
+                                break()
                             }
                         }
                     }
@@ -193,4 +199,21 @@ class ScalaAi(_board: Board, controller: Controller) extends AsyncAi(_board.clon
         totalScore
     }
 
+}
+
+object NativeAi {
+    System.loadLibrary("C4Scala")
+
+    @native def nativeAdviseMove(jBoard: Array[Byte], jHeights: Array[Int], jPieceCount: Int, difficulty: Int):  Int
+}
+
+class NativeAi(board: Board, controller: Controller) extends AsyncAi(board, controller) {
+    override def adviseMove(difficulty: Int): Int = NativeAi.nativeAdviseMove(boardAsByteArray, board.heights.clone, pieceCount, difficulty)
+
+    private lazy val boardAsByteArray: Array[Byte] = board.map({
+        case BLANK => 0.toByte
+        case p: Player => if (p == board.nextPlayer) 1.toByte else -1.toByte
+    }).toArray[Byte]
+
+    private lazy val pieceCount: Int = board.count(BLANK !=)
 }
